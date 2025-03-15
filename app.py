@@ -14,6 +14,9 @@ def load_data():
 # Carregar os dados na variável df
 df = load_data()
 
+# Verificar as colunas do DataFrame (para diagnóstico)
+st.write("Colunas do DataFrame:", df.columns)
+
 # Configuração do Dashboard
 st.set_page_config(page_title="Painel Gerencial 01 NRC", layout="wide")
 st.title("📊 Painel Gerencial 01 NRC")
@@ -34,39 +37,51 @@ st.dataframe(df_filtrado)
 
 def plot_unidades_interligadas(df):
     st.write("### 📊 Distribuição das Unidades Interligadas por Municípios")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='MUNICÍPIOS',
-        y='ÍNDICES IBGE',
-        tooltip=['MUNICÍPIOS', 'ÍNDICES IBGE']
-    ).properties(title="Distribuição por Índice IBGE")
-    st.altair_chart(chart, use_container_width=True)
+    if "MUNICÍPIOS" in df.columns and "ÍNDICES IBGE" in df.columns:
+        chart = alt.Chart(df).mark_bar().encode(
+            x='MUNICÍPIOS',
+            y='ÍNDICES IBGE',
+            tooltip=['MUNICÍPIOS', 'ÍNDICES IBGE']
+        ).properties(title="Distribuição por Índice IBGE")
+        st.altair_chart(chart, use_container_width=True)
+    else:
+        st.error("Campos 'MUNICÍPIOS' ou 'ÍNDICES IBGE' não encontrados nos dados.")
 
 def plot_status_formulario(df):
     st.write("### 📊 Status de Recebimento de Formulários")
-    chart = alt.Chart(df).mark_arc().encode(
-        theta='count():Q',
-        color='STATUS GERAL RECEBIMENTO',
-        tooltip=['STATUS GERAL RECEBIMENTO', 'count():Q']
-    ).properties(title="Status Geral de Recebimento")
-    st.altair_chart(chart, use_container_width=True)
+    if "MUNICÍPIOS" in df.columns and "STATUS GERAL RECEBIMENTO" in df.columns:
+        chart = alt.Chart(df).mark_arc().encode(
+            theta='count():Q',
+            color='STATUS GERAL RECEBIMENTO',
+            tooltip=['STATUS GERAL RECEBIMENTO', 'count():Q']
+        ).properties(title="Status Geral de Recebimento")
+        st.altair_chart(chart, use_container_width=True)
+    else:
+        st.error("Campos 'MUNICÍPIOS' ou 'STATUS GERAL RECEBIMENTO' não encontrados nos dados.")
 
 def plot_municipios_instalacao(df):
     st.write("### 📊 Municípios em Fase de Instalação")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):',
-        y='FASE',
-        tooltip=['MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):', 'FASE']
-    ).properties(title="Fase do Processo de Instalação")
-    st.altair_chart(chart, use_container_width=True)
+    if "MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):" in df.columns and "FASE" in df.columns:
+        chart = alt.Chart(df).mark_bar().encode(
+            x='MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):',
+            y='FASE',
+            tooltip=['MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):', 'FASE']
+        ).properties(title="Fase do Processo de Instalação")
+        st.altair_chart(chart, use_container_width=True)
+    else:
+        st.error("Campos 'MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):' ou 'FASE' não encontrados nos dados.")
 
 def plot_municipios_inviaveis(df):
     st.write("### 📊 Municípios Inviáveis de Instalação")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='MUNICÍPIOS',
-        y='SITUAÇÃO',
-        tooltip=['MUNICÍPIOS', 'SITUAÇÃO']
-    ).properties(title="Situação dos Municípios Inviáveis")
-    st.altair_chart(chart, use_container_width=True)
+    if "MUNICÍPIOS" in df.columns and "SITUAÇÃO" in df.columns:
+        chart = alt.Chart(df).mark_bar().encode(
+            x='MUNICÍPIOS',
+            y='SITUAÇÃO',
+            tooltip=['MUNICÍPIOS', 'SITUAÇÃO']
+        ).properties(title="Situação dos Municípios Inviáveis")
+        st.altair_chart(chart, use_container_width=True)
+    else:
+        st.error("Campos 'MUNICÍPIOS' ou 'SITUAÇÃO' não encontrados nos dados.")
 
 # Seções do Dashboard
 tabs = [
