@@ -385,4 +385,4 @@ def render_units_tab(dataframes):
             st.markdown("</div>", unsafe_allow_html=True)
         
         with col2:
-            st.markdown("
+            st.markdown("<div class='card'>", unsafe_allow_html=True
