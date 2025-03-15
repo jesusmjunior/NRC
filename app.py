@@ -32,106 +32,82 @@ st.dataframe(df_filtrado)
 
 # Funções para gráficos de distribuição com Altair
 def plot_unidades_interligadas(df):
-    """Gráfico de unidades interligadas por Municípios"""
     st.write("### 📊 Distribuição das Unidades Interligadas por Municípios")
     chart = alt.Chart(df).mark_bar().encode(
         x='Municípios',
         y='Índices IBGE',
         tooltip=['Municípios', 'Índices IBGE']
-    ).properties(
-        title="Distribuição por Índice IBGE"
-    )
+    ).properties(title="Distribuição por Índice IBGE")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_status_formulario(df):
-    """Gráfico de status de recebimento de formulários"""
     st.write("### 📊 Status de Recebimento de Formulários")
     chart = alt.Chart(df).mark_arc().encode(
         theta='count():Q',
         color='Status Geral Recebimento:N',
         tooltip=['Status Geral Recebimento', 'count():Q']
-    ).properties(
-        title="Status Geral de Recebimento"
-    )
+    ).properties(title="Status Geral de Recebimento")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_municipios_instalacao(df):
-    """Gráfico de Municípios em Fase de Instalação"""
     st.write("### 📊 Municípios em Fase de Instalação")
     chart = alt.Chart(df).mark_bar().encode(
         x='Municípios',
         y='Fase do Processo',
         tooltip=['Municípios', 'Fase do Processo']
-    ).properties(
-        title="Fase do Processo de Instalação"
-    )
+    ).properties(title="Fase do Processo de Instalação")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_municipios_inviaveis(df):
-    """Gráfico de Municípios Inviáveis de Instalação"""
     st.write("### 📊 Municípios Inviáveis de Instalação")
     chart = alt.Chart(df).mark_bar().encode(
         x='Municípios',
         y='Situação',
         tooltip=['Municípios', 'Situação']
-    ).properties(
-        title="Situação dos Municípios Inviáveis"
-    )
+    ).properties(title="Situação dos Municípios Inviáveis")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_termo_cooperacao(df):
-    """Gráfico de Termo de Cooperação (Provisão 09)"""
     st.write("### 📊 Termo de Cooperação (Provisão 09)")
     chart = alt.Chart(df).mark_arc().encode(
         theta='count():Q',
         color='Municípios que Assinaram o TCT:N',
         tooltip=['Municípios que Assinaram o TCT', 'count():Q']
-    ).properties(
-        title="Termo de Cooperação Assinado ou Pendente"
-    )
+    ).properties(title="Termo de Cooperação Assinado ou Pendente")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_operadores(df):
-    """Gráfico de Operadores e Responsáveis"""
     st.write("### 📊 Operadores e Responsáveis")
     chart = alt.Chart(df).mark_bar().encode(
         x='UI e Serventia Conveniada',
         y='Operador/Preposto da UI',
         tooltip=['UI e Serventia Conveniada', 'Operador/Preposto da UI']
-    ).properties(
-        title="Operadores Responsáveis"
-    )
+    ).properties(title="Operadores Responsáveis")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_cidades_unicef(df):
-    """Gráfico de Cidades com Selo UNICEF"""
     st.write("### 📊 Cidades com Selo UNICEF")
     chart = alt.Chart(df).mark_bar().encode(
         x='Cidades com Selo UNICEF',
         y='Com ou Sem UI',
         tooltip=['Cidades com Selo UNICEF', 'Com ou Sem UI']
-    ).properties(
-        title="Cidades com Selo UNICEF e Unidades Interligadas"
-    )
+    ).properties(title="Cidades com Selo UNICEF e Unidades Interligadas")
     st.altair_chart(chart, use_container_width=True)
 
 def plot_ui_paralisadas(df):
-    """Gráfico de UI Paralisadas e Sem Contato"""
     st.write("### 📊 UI Paralisadas e Sem Contato")
     chart = alt.Chart(df).mark_bar().encode(
         x='Unidades Paralisadas',
         y='Situação',
         tooltip=['Unidades Paralisadas', 'Situação']
-    ).properties(
-        title="UI Paralisadas e Sem Contato"
-    )
+    ).properties(title="UI Paralisadas e Sem Contato")
     st.altair_chart(chart, use_container_width=True)
 
 # Seções do Dashboard
 tabs = [
     "Unidades Interligadas", "Status Recebimento Formulário", "Municípios em Fase de Instalação",
     "Municípios Inviáveis de Instalação", "Termo de Cooperação", "Operadores",
-    "Hospitais das UI", "UI Paralisadas", "Horários de Funcionamento", "Cidades com Selo UNICEF"
+    "Hospitais das UI", "UI Paralisadas"
 ]
 
 # Barra lateral para escolha de seção
