@@ -32,7 +32,7 @@ st.dataframe(df_filtrado)
 
 # Funções para gráficos de distribuição com Altair
 def plot_unidades_interligadas(df):
-    """Gráfico de distribuição das Unidades Interligadas por Municípios"""
+    """Gráfico de unidades interligadas por Municípios"""
     st.write("### 📊 Distribuição das Unidades Interligadas por Municípios")
     chart = alt.Chart(df).mark_bar().encode(
         x='Municípios',
@@ -55,55 +55,6 @@ def plot_status_formulario(df):
     )
     st.altair_chart(chart, use_container_width=True)
 
-def plot_fase_instalacao(df):
-    """Gráfico da fase de instalação dos municípios"""
-    st.write("### 📊 Fase de Instalação dos Municípios")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='Municípios',
-        y='Fase do Processo',
-        tooltip=['Municípios', 'Fase do Processo']
-    ).properties(
-        title="Fase do Processo de Instalação"
-    )
-    st.altair_chart(chart, use_container_width=True)
-
-def plot_hospitais_ui(df):
-    """Gráfico de hospitais fora da lista Alice"""
-    st.write("### 📊 Hospitais Fora da Lista Alice")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='Municípios',
-        y='Hospitais Fora da Lista Alice',
-        tooltip=['Municípios', 'Hospitais Fora da Lista Alice']
-    ).properties(
-        title="Hospitais Fora da Lista Alice"
-    )
-    st.altair_chart(chart, use_container_width=True)
-
-def plot_ui_paralisadas(df):
-    """Gráfico de Unidades Interligadas Paralisadas e Sem Contato"""
-    st.write("### 📊 UI Paralisadas e Sem Contato")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='Unidades Paralisadas',
-        y='Situação',
-        tooltip=['Unidades Paralisadas', 'Situação']
-    ).properties(
-        title="UI Paralisadas e Sem Contato"
-    )
-    st.altair_chart(chart, use_container_width=True)
-
-def plot_cidades_unicef(df):
-    """Gráfico de Cidades com Selo UNICEF"""
-    st.write("### 📊 Cidades com Selo UNICEF")
-    chart = alt.Chart(df).mark_bar().encode(
-        x='Cidades com Selo UNICEF',
-        y='Com ou Sem UI',
-        tooltip=['Cidades com Selo UNICEF', 'Com ou Sem UI']
-    ).properties(
-        title="Cidades com Selo UNICEF e Unidades Interligadas"
-    )
-    st.altair_chart(chart, use_container_width=True)
-
-# Funções para outras seções
 def plot_municipios_instalacao(df):
     """Gráfico de Municípios em Fase de Instalação"""
     st.write("### 📊 Municípios em Fase de Instalação")
@@ -112,7 +63,7 @@ def plot_municipios_instalacao(df):
         y='Fase do Processo',
         tooltip=['Municípios', 'Fase do Processo']
     ).properties(
-        title="Fase de Instalação dos Municípios"
+        title="Fase do Processo de Instalação"
     )
     st.altair_chart(chart, use_container_width=True)
 
@@ -152,6 +103,30 @@ def plot_operadores(df):
     )
     st.altair_chart(chart, use_container_width=True)
 
+def plot_cidades_unicef(df):
+    """Gráfico de Cidades com Selo UNICEF"""
+    st.write("### 📊 Cidades com Selo UNICEF")
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Cidades com Selo UNICEF',
+        y='Com ou Sem UI',
+        tooltip=['Cidades com Selo UNICEF', 'Com ou Sem UI']
+    ).properties(
+        title="Cidades com Selo UNICEF e Unidades Interligadas"
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+def plot_ui_paralisadas(df):
+    """Gráfico de UI Paralisadas e Sem Contato"""
+    st.write("### 📊 UI Paralisadas e Sem Contato")
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Unidades Paralisadas',
+        y='Situação',
+        tooltip=['Unidades Paralisadas', 'Situação']
+    ).properties(
+        title="UI Paralisadas e Sem Contato"
+    )
+    st.altair_chart(chart, use_container_width=True)
+
 # Seções do Dashboard
 tabs = [
     "Unidades Interligadas", "Status Recebimento Formulário", "Municípios em Fase de Instalação",
@@ -170,7 +145,7 @@ elif selected_tab == "Status Recebimento Formulário":
 elif selected_tab == "Municípios em Fase de Instalação":
     plot_municipios_instalacao(df_filtrado)
 elif selected_tab == "Hospitais das UI":
-    plot_hospitais_ui(df_filtrado)
+    plot_operadores(df_filtrado)
 elif selected_tab == "UI Paralisadas":
     plot_ui_paralisadas(df_filtrado)
 elif selected_tab == "Cidades com Selo UNICEF":
@@ -179,8 +154,6 @@ elif selected_tab == "Municípios Inviáveis de Instalação":
     plot_municipios_inviaveis(df_filtrado)
 elif selected_tab == "Termo de Cooperação":
     plot_termo_cooperacao(df_filtrado)
-elif selected_tab == "Operadores":
-    plot_operadores(df_filtrado)
 
 # Baixar dados filtrados
 st.sidebar.download_button("📥 Baixar Dados Filtrados", df_filtrado.to_csv(index=False), "dados_filtrados.csv", "text/csv")
