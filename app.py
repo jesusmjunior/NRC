@@ -74,7 +74,7 @@ def load_data():
         st.error(f"Error loading data: {e}")
         return None
 
-# Custom CSS styling
+# Apply custom CSS
 def apply_custom_css():
     st.markdown("""
     <style>
@@ -122,267 +122,226 @@ def apply_custom_css():
             background-color: #E2E8F0;
             margin: 2rem 0;
         }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 2px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            background-color: #F8FAFC;
-            border-radius: 4px 4px 0 0;
-            padding: 10px 20px;
-            border: 1px solid #E2E8F0;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #DBEAFE;
-            border-bottom: 2px solid #2563EB;
-        }
     </style>
     """, unsafe_allow_html=True)
 
-# Overview tab
-def render_overview_tab(dataframes):
-    st.markdown("<div class='sub-header'>Overview</div>", unsafe_allow_html=True)
+# Form status tab
+def render_form_status_tab(dataframes):
+    st.markdown("<div class='sub-header'>Form Submission Status</div>", unsafe_allow_html=True)
+    
+    if "STATUS RECEB FORMULARIO" in dataframes:
+        df = dataframes["STATUS RECEB FORMULARIO"]
+        
+        # Calculate metrics
+        total_forms = len(df)
+        received_forms = df[df["STATUS GERAL"] == "RECEBIDO"].shape[0] if "STATUS GERAL" in df.columns else 0
+        pending_forms = total_forms - received_forms
+        
+        # Display metrics
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-value'>{total_forms}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='metric-label'>Total Forms</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-value'>{received_forms}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='metric-label'>Received Forms</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-value'>{pending_forms}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='metric-label'>Pending Forms</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Data table
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+        st.subheader("Form Status Details")
+        st.dataframe(df)
+    else:
+        st.error("Data sheet 'STATUS RECEB FORMULARIO' not found in the spreadsheet.")
+
+# Installation tab
+def render_installation_tab(dataframes):
+    st.markdown("<div class='sub-header'>Installation Analysis</div>", unsafe_allow_html=True)
+    
+    # Check if the installation sheets exist
+    if "MUNICÍPIOS PARA INSTALAR" in dataframes and "MUN. INVIÁVEIS DE INSTALAÇÃO" in dataframes:
+        to_install_df = dataframes["MUNICÍPIOS PARA INSTALAR"]
+        not_viable_df = dataframes["MUN. INVIÁVEIS DE INSTALAÇÃO"]
+        
+        # Calculate metrics
+        to_install_count = len(to_install_df)
+        not_viable_count = len(not_viable_df)
+        
+        # Display metrics
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-value'>{to_install_count}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='metric-label'>Municipalities To Install</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-value'>{not_viable_count}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='metric-label'>Non-Viable Municipalities</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Display data tables
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+        
+        tab1, tab2 = st.tabs(["To Install", "Non-Viable"])
+        
+        with tab1:
+            st.subheader("Municipalities To Install")
+            st.dataframe(to_install_df)
+        
+        with tab2:
+            st.subheader("Non-Viable Municipalities")
+            st.dataframe(not_viable_df)
+    else:
+        st.error("Installation data sheets not found in the spreadsheet.")
+
+# Predictive Analysis Tab
+def render_predictive_tab(dataframes):
+    st.markdown("<div class='sub-header'>Predictive Analysis</div>", unsafe_allow_html=True)
     
     if "UNIDADES INTERLIGADAS" in dataframes:
         df = dataframes["UNIDADES INTERLIGADAS"]
         
-        # Display main metrics
-        col1, col2, col3, col4 = st.columns(4)
+        st.markdown("""
+        This tab provides predictive analytics based on historical installation data. 
+        The analysis helps forecast future installations and identify potential patterns.
+        """)
         
-        # Total units
-        total_units = len(df)
-        with col1:
-            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-            st.markdown(f"<div class='metric-value'>{total_units}</div>", unsafe_allow_html=True)
-            st.markdown("<div class='metric-label'>Total Interconnected Units</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Total municipalities
-        total_municipalities = df['MUNICÍPIOS'].nunique()
-        with col2:
-            st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-            st.markdown(f"<div class='metric-value'>{total_municipalities}</div>", unsafe_allow_html=True)
-            st.markdown("<div class='metric-label'>Unique Municipalities</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Units by administrative sphere
-        if 'ESFERA ADMINISTRATIVA' in df.columns:
-            sphere_counts = df['ESFERA ADMINISTRATIVA'].value_counts()
-            most_common_sphere = sphere_counts.index[0] if not sphere_counts.empty else "N/A"
-            sphere_count = sphere_counts.iloc[0] if not sphere_counts.empty else 0
-            with col3:
-                st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                st.markdown(f"<div class='metric-value'>{sphere_count}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='metric-label'>Units in {most_common_sphere}</div>", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Active units
-        if 'SITUAÇÃO' in df.columns:
-            active_units = df[df['SITUAÇÃO'] == 'ATIVA'].shape[0]
-            active_percentage = (active_units / total_units) * 100 if total_units > 0 else 0
-            with col4:
-                st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                st.markdown(f"<div class='metric-value'>{active_units}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='metric-label'>Active Units ({active_percentage:.1f}%)</div>", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-        
-        # Data visualization section
-        st.markdown("<div class='sub-header'>Data Visualization</div>", unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        
-        # Distribution of units by municipality
-        with col1:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("Units by Municipality")
-            
-            municipality_counts = df['MUNICÍPIOS'].value_counts().reset_index()
-            municipality_counts.columns = ['Municipality', 'Count']
-            
-            # Get top 10 municipalities by unit count
-            top_municipalities = municipality_counts.head(10)
-            
-            fig = px.bar(
-                top_municipalities, 
-                x='Municipality', 
-                y='Count',
-                color='Count',
-                color_continuous_scale='Blues',
-                labels={'Count': 'Number of Units', 'Municipality': 'Municipality'}
-            )
-            
-            fig.update_layout(
-                height=400,
-                margin=dict(l=20, r=20, t=30, b=20),
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Administrative sphere distribution
-        with col2:
-            if 'ESFERA ADMINISTRATIVA' in df.columns:
-                st.markdown("<div class='card'>", unsafe_allow_html=True)
-                st.subheader("Administrative Sphere Distribution")
-                
-                sphere_counts = df['ESFERA ADMINISTRATIVA'].value_counts().reset_index()
-                sphere_counts.columns = ['Sphere', 'Count']
-                
-                fig = px.pie(
-                    sphere_counts, 
-                    values='Count', 
-                    names='Sphere',
-                    color_discrete_sequence=px.colors.sequential.Blues,
-                    hole=0.4
-                )
-                
-                fig.update_layout(
-                    height=400,
-                    margin=dict(l=20, r=20, t=30, b=20),
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                st.info("Administrative sphere data not available.")
-        
-        # Installations over time
+        # Check if we have installation date data
         if 'DATA DA INSTALAÇÃO' in df.columns:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("Installations Over Time")
-            
             # Convert to datetime
             df['DATA DA INSTALAÇÃO'] = pd.to_datetime(df['DATA DA INSTALAÇÃO'], errors='coerce')
             
-            # Group by year and month
+            # Create year-month field
             df['year_month'] = df['DATA DA INSTALAÇÃO'].dt.strftime('%Y-%m')
+            
+            # Monthly installation counts
             monthly_counts = df.groupby('year_month').size().reset_index(name='count')
-            monthly_counts['cumulative'] = monthly_counts['count'].cumsum()
             
-            # Create figure with secondary y-axis
-            fig = go.Figure()
+            # Simple moving average for trend
+            window_size = min(3, len(monthly_counts))
+            monthly_counts['trend'] = monthly_counts['count'].rolling(window=window_size).mean()
             
-            # Add monthly installations
-            fig.add_trace(go.Bar(
-                x=monthly_counts['year_month'],
-                y=monthly_counts['count'],
-                name='Monthly Installations',
-                marker_color='#93C5FD'
-            ))
+            # Create chart
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("Installation Trend Analysis")
             
-            # Add cumulative installations
-            fig.add_trace(go.Scatter(
-                x=monthly_counts['year_month'],
-                y=monthly_counts['cumulative'],
-                name='Cumulative Installations',
-                marker_color='#1E40AF',
-                yaxis='y2'
-            ))
+            fig = px.line(
+                monthly_counts, 
+                x='year_month', 
+                y=['count', 'trend'],
+                labels={'value': 'Number of Installations', 'year_month': 'Month', 'variable': 'Metric'},
+                color_discrete_map={'count': '#3B82F6', 'trend': '#1E40AF'}
+            )
             
-            # Set layout
             fig.update_layout(
                 height=400,
                 margin=dict(l=20, r=20, t=30, b=20),
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right",
-                    x=1
-                ),
-                yaxis=dict(
-                    title='Monthly Installations',
-                    titlefont=dict(color='#93C5FD'),
-                    tickfont=dict(color='#93C5FD')
-                ),
-                yaxis2=dict(
-                    title='Cumulative Installations',
-                    titlefont=dict(color='#1E40AF'),
-                    tickfont=dict(color='#1E40AF'),
-                    overlaying='y',
-                    side='right'
-                )
             )
             
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Simple projection
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("Installation Projection")
+            
+            # Calculate average monthly installations (last 6 months or all if less)
+            recent_months = min(6, len(monthly_counts))
+            avg_monthly = monthly_counts['count'].tail(recent_months).mean()
+            
+            # Create projection for next 6 months
+            last_date = pd.to_datetime(monthly_counts['year_month'].iloc[-1])
+            future_dates = [(last_date + pd.DateOffset(months=i+1)).strftime('%Y-%m') for i in range(6)]
+            future_df = pd.DataFrame({
+                'year_month': future_dates,
+                'projected': [round(avg_monthly)] * 6
+            })
+            
+            # Combine with historical data
+            hist_df = monthly_counts[['year_month', 'count']].rename(columns={'count': 'historical'})
+            combined_df = pd.merge(hist_df, future_df, on='year_month', how='outer')
+            
+            # Plot
+            fig = go.Figure()
+            
+            # Historical line
+            fig.add_trace(go.Scatter(
+                x=combined_df['year_month'],
+                y=combined_df['historical'],
+                name='Historical',
+                line=dict(color='#3B82F6', width=2)
+            ))
+            
+            # Projection line
+            fig.add_trace(go.Scatter(
+                x=combined_df['year_month'],
+                y=combined_df['projected'],
+                name='Projection',
+                line=dict(color='#10B981', width=2, dash='dash')
+            ))
+            
+            fig.update_layout(
+                height=400,
+                margin=dict(l=20, r=20, t=30, b=20),
+                xaxis_title='Month',
+                yaxis_title='Number of Installations'
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown(f"""
+            Based on the last {recent_months} months of data, we project an average of 
+            **{avg_monthly:.1f} new installations per month** over the next 6 months.
+            """)
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.warning("Installation date data is not available for predictive analysis.")
     else:
         st.error("Main data sheet 'UNIDADES INTERLIGADAS' not found in the spreadsheet.")
 
-# Interconnected units tab
-def render_units_tab(dataframes):
-    st.markdown("<div class='sub-header'>Interconnected Units Analysis</div>", unsafe_allow_html=True)
+# Main app function
+def main():
+    apply_custom_css()
     
-    if "UNIDADES INTERLIGADAS" in dataframes:
-        df = dataframes["UNIDADES INTERLIGADAS"]
+    # App header
+    st.markdown("<div class='main-header'>NRC CGJ - Unidades Interligadas Dashboard</div>", unsafe_allow_html=True)
+    
+    # Load data
+    dataframes = load_data()
+    
+    if dataframes:
+        # Create tabs
+        tabs = st.tabs(["Overview", "Interconnected Units", "Form Status", "Installation Analysis", "Predictive Analysis"])
         
-        # Add filters in sidebar
-        st.sidebar.markdown("### Filters")
+        with tabs[0]:
+            render_overview_tab(dataframes)
         
-        # Municipality filter
-        all_municipalities = sorted(df['MUNICÍPIOS'].unique())
-        selected_municipalities = st.sidebar.multiselect(
-            "Select Municipalities", 
-            all_municipalities,
-            default=[]
-        )
+        with tabs[1]:
+            render_units_tab(dataframes)
         
-        # Administrative sphere filter
-        if 'ESFERA ADMINISTRATIVA' in df.columns:
-            all_spheres = sorted(df['ESFERA ADMINISTRATIVA'].unique())
-            selected_spheres = st.sidebar.multiselect(
-                "Select Administrative Spheres", 
-                all_spheres,
-                default=[]
-            )
+        with tabs[2]:
+            render_form_status_tab(dataframes)
         
-        # Status filter
-        if 'SITUAÇÃO' in df.columns:
-            all_statuses = sorted(df['SITUAÇÃO'].unique())
-            selected_statuses = st.sidebar.multiselect(
-                "Select Status", 
-                all_statuses,
-                default=[]
-            )
+        with tabs[3]:
+            render_installation_tab(dataframes)
         
-        # Apply filters
-        filtered_df = df.copy()
-        if selected_municipalities:
-            filtered_df = filtered_df[filtered_df['MUNICÍPIOS'].isin(selected_municipalities)]
-        if 'ESFERA ADMINISTRATIVA' in df.columns and selected_spheres:
-            filtered_df = filtered_df[filtered_df['ESFERA ADMINISTRATIVA'].isin(selected_spheres)]
-        if 'SITUAÇÃO' in df.columns and selected_statuses:
-            filtered_df = filtered_df[filtered_df['SITUAÇÃO'].isin(selected_statuses)]
-        
-        # Main content
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("Status Distribution")
-            
-            if 'SITUAÇÃO' in df.columns:
-                status_counts = filtered_df['SITUAÇÃO'].value_counts().reset_index()
-                status_counts.columns = ['Status', 'Count']
-                
-                fig = px.pie(
-                    status_counts, 
-                    values='Count', 
-                    names='Status',
-                    color_discrete_sequence=px.colors.sequential.Blues,
-                    hole=0.4
-                )
-                
-                fig.update_layout(
-                    height=400,
-                    margin=dict(l=20, r=20, t=30, b=20),
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("Status data not available.")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("<div class='card'>", unsafe_allow_html=True
+        with tabs[4]:
+            render_predictive_tab(dataframes)
+    else:
+        st.error("Failed to load data. Please check your connection and credentials.")
+
+if __name__ == "__main__":
+    main()
