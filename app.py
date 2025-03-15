@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import altair as alt
 
-# URL da planilha do Google Sheets (compartilhada publicamente)
+# Link da planilha do Google Sheets (compartilhada publicamente)
 sheet_url = "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/export?format=csv&id=1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq&gid=666685797"
 
-# Carregar os dados do Google Sheets com cache
+# Carregar os dados do Google Sheets
 @st.cache_data
 def load_data():
     """Função para carregar dados da planilha do Google Sheets"""
@@ -30,67 +30,127 @@ df_filtrado = df[df["Municípios"].isin(municipios) & df["Esferas"].isin(esferas
 st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
 st.dataframe(df_filtrado)
 
-# Funções para gráficos de distribuição
+# Funções para gráficos de distribuição com Altair
 def plot_unidades_interligadas(df):
     """Gráfico de distribuição das Unidades Interligadas por Municípios"""
     st.write("### 📊 Distribuição das Unidades Interligadas por Municípios")
-    fig = px.bar(df, x="Municípios", y="Índices IBGE", title="Distribuição por Índice IBGE")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Municípios',
+        y='Índices IBGE',
+        tooltip=['Municípios', 'Índices IBGE']
+    ).properties(
+        title="Distribuição por Índice IBGE"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_status_formulario(df):
     """Gráfico de status de recebimento de formulários"""
     st.write("### 📊 Status de Recebimento de Formulários")
-    fig = px.pie(df, names="Status Geral Recebimento", title="Status Geral de Recebimento")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_arc().encode(
+        theta='count():Q',
+        color='Status Geral Recebimento:N',
+        tooltip=['Status Geral Recebimento', 'count():Q']
+    ).properties(
+        title="Status Geral de Recebimento"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_fase_instalacao(df):
     """Gráfico da fase de instalação dos municípios"""
     st.write("### 📊 Fase de Instalação dos Municípios")
-    fig = px.bar(df, x="Municípios", y="Fase do Processo", title="Fase do Processo de Instalação")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Municípios',
+        y='Fase do Processo',
+        tooltip=['Municípios', 'Fase do Processo']
+    ).properties(
+        title="Fase do Processo de Instalação"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_hospitais_ui(df):
     """Gráfico de hospitais fora da lista Alice"""
     st.write("### 📊 Hospitais Fora da Lista Alice")
-    fig = px.bar(df, x="Municípios", y="Hospitais Fora da Lista Alice", title="Hospitais Fora da Lista Alice")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Municípios',
+        y='Hospitais Fora da Lista Alice',
+        tooltip=['Municípios', 'Hospitais Fora da Lista Alice']
+    ).properties(
+        title="Hospitais Fora da Lista Alice"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_ui_paralisadas(df):
     """Gráfico de Unidades Interligadas Paralisadas e Sem Contato"""
     st.write("### 📊 UI Paralisadas e Sem Contato")
-    fig = px.bar(df, x="Unidades Paralisadas", y="Situação", title="UI Paralisadas e Sem Contato")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Unidades Paralisadas',
+        y='Situação',
+        tooltip=['Unidades Paralisadas', 'Situação']
+    ).properties(
+        title="UI Paralisadas e Sem Contato"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_cidades_unicef(df):
     """Gráfico de Cidades com Selo UNICEF"""
     st.write("### 📊 Cidades com Selo UNICEF")
-    fig = px.bar(df, x="Cidades com Selo UNICEF", y="Com ou Sem UI", title="Cidades com Selo UNICEF e Unidades Interligadas")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Cidades com Selo UNICEF',
+        y='Com ou Sem UI',
+        tooltip=['Cidades com Selo UNICEF', 'Com ou Sem UI']
+    ).properties(
+        title="Cidades com Selo UNICEF e Unidades Interligadas"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 # Funções para outras seções
 def plot_municipios_instalacao(df):
     """Gráfico de Municípios em Fase de Instalação"""
     st.write("### 📊 Municípios em Fase de Instalação")
-    fig = px.bar(df, x="Municípios", y="Fase do Processo", title="Fase de Instalação dos Municípios")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Municípios',
+        y='Fase do Processo',
+        tooltip=['Municípios', 'Fase do Processo']
+    ).properties(
+        title="Fase de Instalação dos Municípios"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_municipios_inviaveis(df):
     """Gráfico de Municípios Inviáveis de Instalação"""
     st.write("### 📊 Municípios Inviáveis de Instalação")
-    fig = px.bar(df, x="Municípios", y="Situação", title="Situação dos Municípios Inviáveis")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='Municípios',
+        y='Situação',
+        tooltip=['Municípios', 'Situação']
+    ).properties(
+        title="Situação dos Municípios Inviáveis"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_termo_cooperacao(df):
     """Gráfico de Termo de Cooperação (Provisão 09)"""
     st.write("### 📊 Termo de Cooperação (Provisão 09)")
-    fig = px.pie(df, names="Municípios que Assinaram o TCT", title="Termo de Cooperação Assinado ou Pendente")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_arc().encode(
+        theta='count():Q',
+        color='Municípios que Assinaram o TCT:N',
+        tooltip=['Municípios que Assinaram o TCT', 'count():Q']
+    ).properties(
+        title="Termo de Cooperação Assinado ou Pendente"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 def plot_operadores(df):
     """Gráfico de Operadores e Responsáveis"""
     st.write("### 📊 Operadores e Responsáveis")
-    fig = px.bar(df, x="UI e Serventia Conveniada", y="Operador/Preposto da UI", title="Operadores Responsáveis")
-    st.plotly_chart(fig)
+    chart = alt.Chart(df).mark_bar().encode(
+        x='UI e Serventia Conveniada',
+        y='Operador/Preposto da UI',
+        tooltip=['UI e Serventia Conveniada', 'Operador/Preposto da UI']
+    ).properties(
+        title="Operadores Responsáveis"
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 # Seções do Dashboard
 tabs = [
