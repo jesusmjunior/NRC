@@ -43,15 +43,6 @@ if selected_tab == "UNIDADES INTERLIGADAS":
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
 
-    # Gráfico de Barras - Índices IBGE por Município
-    st.write("### 📊 Índices IBGE por Município")
-    bar_chart = alt.Chart(df_filtrado).mark_bar().encode(
-        x=alt.X("MUNICÍPIOS", sort='-y'),
-        y="ÍNDICES IBGE",
-        color="SITUAÇÃO GERAL"
-    ).properties(title="Índices IBGE por Município")
-    st.altair_chart(bar_chart, use_container_width=True)
-
     # Gráfico Pie - Situação Geral
     pie_data = df_filtrado['SITUAÇÃO GERAL'].value_counts().reset_index()
     pie_data.columns = ['Situação Geral', 'Total']
