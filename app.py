@@ -101,7 +101,12 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    # Campos corrigidos exatamente como no CSV
+    # Limpeza dos nomes de colunas
+    df.columns = df.columns.str.strip()
+
+    # Mostrando para conferência
+    st.write("🔍 Colunas:", df.columns.tolist())
+
     municipios = st.sidebar.multiselect(
         "Selecione os Municípios", 
         df["MUNICÍPIOS"].unique(), 
@@ -122,7 +127,7 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
 
-    # Gráfico Pizza - Distribuição das Situações
+    # Gráfico Pizza
     situacao_data = df_filtrado['SITUAÇÃO'].value_counts().reset_index()
     situacao_data.columns = ['Situação', 'Total']
     pie_chart = alt.Chart(situacao_data).mark_arc().encode(
