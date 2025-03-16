@@ -23,8 +23,8 @@ sheet_urls = {
     "MUNICIPIOS PARA REATIVA": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20REATIVA",
     "CIDADES COM SELO UNICEF": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=CIDADES%20COM%20SELO%20UNICEF",
     "SUB-REGISTRO 2023": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=SUB-REGISTRO%202023"
+    "MUNICÍPIOS C PIORES ÍNDICES 2": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICÍPIOS%20C%20PIORES%20ÍNDICES%202"
 }
-
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
 st.sidebar.header("📂 Seleção de Aba")
 tabs = list(sheet_urls.keys())
@@ -176,6 +176,60 @@ elif selected_tab == "SUB-REGISTRO 2023":
     st.dataframe(df)
 
     st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "subregistro_2023.csv")
+
+# ================== ABA 9: MUNICÍPIOS C PIORES ÍNDICES 2 ==================
+elif selected_tab == "MUNICÍPIOS C PIORES ÍNDICES 2":
+    st.header("📉 Municípios com Piores Índices de Sub-registro")
+
+    # Limpeza preventiva de colunas (tira espaços)
+    df.columns = df.columns.str.strip()
+
+    # Mostrar colunas para conferência (opcional)
+    st.write("🧐 Colunas disponíveis:", df.columns.tolist())
+
+    # ======== Filtros ========
+    municipios = st.sidebar.multiselect(
+        "Selecione os Municípios",
+        df["MUNICÍPIO"].unique(),
+        default=df["MUNICÍPIO"].unique()
+    )
+
+    situacoes = st.sidebar.multiselect(
+        "Selecione a Situação",
+        df["SITUAÇÃO"].unique(),
+        default=df["SITUAÇÃO"].unique()
+    )
+
+    # ======== Aplicar Filtros ========
+    df_filtrado = df[
+        (df["MUNICÍPIO"].isin(municipios)) &
+        (df["SITUAÇÃO"].isin(situacoes))
+    ]
+
+    st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
+    st.dataframe(df_filtrado)
+
+    # ======== Gráfico de Barras: SUB-REGISTRO EM % ========
+    df_ordenado = df_filtrado.sort_values(by="SUB-REGISTRO EM %", ascending=False)
+
+    bar_chart = alt.Chart(df_ordenado).mark_bar().encode(
+        x=alt.X('MUNICÍPIO:N', sort='-y', title='Município'),
+        y=alt.Y('SUB-REGISTRO EM %:Q', title='Sub-registro (%)'),
+        color=alt.Color('SITUAÇÃO:N', title='Situação')
+    ).properties(
+        title="📊 Índice de Sub-registro por Município"
+    )
+
+    st.altair_chart(bar_chart, use_container_width=True)
+
+    # ======== Download ========
+    csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
+    st.sidebar.download_button(
+        label="📥 Baixar Dados",
+        data=csv.encode('utf-8-sig'),
+        file_name="municipios_piores_indices.csv",
+        mime='text/csv'
+    )
 
 # ================== MENSAGEM FINAL ==================
 st.success("✅ Dashboard atualizado com os dados das abas do Google Sheets!")
