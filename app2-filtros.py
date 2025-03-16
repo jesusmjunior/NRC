@@ -32,7 +32,6 @@ sheet_id = "1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
 
 sheet_urls = {
-    "MUN. INVIÁVEIS DE INSTALAÇÃO": f"{base_url}MUN.%20INVI%C3%81VEIS%20DE%20INSTALA%C3%87%C3%83O",
     "MUNICÍPIOS PARA REATIVA": f"{base_url}MUNIC%C3%8DPIOS%20PARA%20REATIVA",
     "TAB ACOMPANHAMENTO ARTICULAÇÃO": f"{base_url}TAB%20ACOMPANHAMENTO%20ARTICULA%C3%87%C3%83O",
     "ÍNDICES DE SUB-REGISTRO": f"{base_url}%C3%8DNDICES%20DE%20SUB-REGISTRO"
@@ -70,33 +69,6 @@ def show_data_summary(dataframe):
     with col3:
         st.metric("Última atualização", datetime.now().strftime("%d/%m/%Y"))
 
-# ================== ABA 5: MUN. INVIÁVEIS DE INSTALAÇÃO ==================
-if selected_tab == "MUN. INVIÁVEIS DE INSTALAÇÃO":
-    st.header("🚫 Municípios Inviáveis de Instalação")
-    try:
-        col_municipios = "MUNICÍPIOS"
-        col_situacao = "SITUAÇÃO"
-        municipios = st.sidebar.multiselect(
-            "Selecione os Municípios", 
-            df[col_municipios].unique(), 
-            default=df[col_municipios].unique()
-        )
-        situacao = st.sidebar.multiselect(
-            "Situação", 
-            df[col_situacao].unique(), 
-            default=df[col_situacao].unique()
-        )
-        df_filtrado = df[(df[col_municipios].isin(municipios)) & (df[col_situacao].isin(situacao))]
-
-        show_data_summary(df_filtrado)
-        st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
-        st.dataframe(df_filtrado, use_container_width=True)
-
-        create_download_button(df_filtrado, "municipios_inviaveis.csv")
-        
-    except Exception as e:
-        st.error(f"Erro ao processar a aba: {str(e)}")
-        st.error(traceback.format_exc())
 
 # ================== ABA 7: MUNICÍPIOS PARA REATIVA ==================
 elif selected_tab == "MUNICÍPIOS PARA REATIVA":
