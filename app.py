@@ -97,16 +97,15 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
     st.dataframe(df_filtrado)
 
     st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_para_instalar.csv")
-
 # ================== ABA 4: MUN INVIAVEIS DE INSTALACAO ==================
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    # Corrigindo os campos
+    # Campos corrigidos exatamente como no CSV
     municipios = st.sidebar.multiselect(
         "Selecione os Municípios", 
-        df["MUNICÍPIO"].unique(), 
-        default=df["MUNICÍPIO"].unique()
+        df["MUNICÍPIOS"].unique(), 
+        default=df["MUNICÍPIOS"].unique()
     )
 
     situacoes = st.sidebar.multiselect(
@@ -116,7 +115,7 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     )
 
     df_filtrado = df[
-        (df["MUNICÍPIO"].isin(municipios)) &
+        (df["MUNICÍPIOS"].isin(municipios)) &
         (df["SITUAÇÃO"].isin(situacoes))
     ]
 
@@ -140,7 +139,6 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
         file_name="municipios_inviaveis.csv", 
         mime='text/csv'
     )
-
 # ================== ABA 5: PROVIMENTO 09 ==================
 elif selected_tab == "PROVIMENTO 09":
     st.header("📜 Provimento 09")
