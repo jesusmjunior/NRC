@@ -82,11 +82,9 @@ elif selected_tab == "STATUS RECEB FORMULARIO":
 elif selected_tab == "MUNICIPIOS PARA INSTALAR":
     st.header("🔹 Municípios para Instalar")
 
-    # Mostrar colunas disponíveis para debug
     st.write("### 🔍 Colunas disponíveis:")
     st.write(df.columns.tolist())
 
-    # Usando a primeira coluna como referência até validar
     municipios = st.sidebar.multiselect("Selecione os Municípios", df.iloc[:, 0].unique(), default=df.iloc[:, 0].unique())
 
     df_filtrado = df[
@@ -102,22 +100,17 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS"].unique(), default=df["MUNICÍPIOS"].unique())
+    st.write("### 🔍 Colunas disponíveis:")
+    st.write(df.columns.tolist())
+
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df.iloc[:, 0].unique(), default=df.iloc[:, 0].unique())
 
     df_filtrado = df[
-        (df["MUNICÍPIOS"].isin(municipios))
+        (df.iloc[:, 0].isin(municipios))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
-
-    pie_data = df_filtrado['SITUAÇÃO'].value_counts().reset_index()
-    pie_data.columns = ['Situação', 'Total']
-    pie_chart = alt.Chart(pie_data).mark_arc().encode(
-        theta=alt.Theta(field="Total", type="quantitative"),
-        color=alt.Color(field="Situação", type="nominal")
-    ).properties(title="Distribuição das Situações")
-    st.altair_chart(pie_chart, use_container_width=True)
 
     st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_inviaveis.csv")
 
