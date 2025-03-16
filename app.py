@@ -102,16 +102,44 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS"].unique(), default=df["MUNICÍPIOS"].unique())
+    # Corrigindo os campos
+    municipios = st.sidebar.multiselect(
+        "Selecione os Municípios", 
+        df["MUNICÍPIO"].unique(), 
+        default=df["MUNICÍPIO"].unique()
+    )
+
+    situacoes = st.sidebar.multiselect(
+        "Selecione a Situação", 
+        df["SITUAÇÃO"].unique(), 
+        default=df["SITUAÇÃO"].unique()
+    )
 
     df_filtrado = df[
-        (df["MUNICÍPIOS"].isin(municipios))
+        (df["MUNICÍPIO"].isin(municipios)) &
+        (df["SITUAÇÃO"].isin(situacoes))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
 
-    st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_inviaveis.csv")
+    # Gráfico Pizza - Distribuição das Situações
+    situacao_data = df_filtrado['SITUAÇÃO'].value_counts().reset_index()
+    situacao_data.columns = ['Situação', 'Total']
+    pie_chart = alt.Chart(situacao_data).mark_arc().encode(
+        theta=alt.Theta(field="Total", type="quantitative"),
+        color=alt.Color(field="Situação", type="nominal")
+    ).properties(title="Distribuição da Situação dos Municípios Inviáveis")
+    st.altair_chart(pie_chart, use_container_width=True)
+
+    # Download corrigido
+    csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
+    st.sidebar.download_button(
+        "📥 Baixar Dados", 
+        data=csv.encode('utf-8-sig'), 
+        file_name="municipios_inviaveis.csv", 
+        mime='text/csv'
+    )
 
 # ================== ABA 5: PROVIMENTO 09 ==================
 elif selected_tab == "PROVIMENTO 09":
