@@ -1,4 +1,4 @@
-termine esse codigo import streamlit as st
+import streamlit as st
 import pandas as pd
 import altair as alt
 import numpy as np
