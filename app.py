@@ -1,106 +1,35 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.express as px
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# Link da planilha do Google Sheets (compartilhada publicamente)
-sheet_url = "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/export?format=csv&id=1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq&gid=666685797"
+# Conexão Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
+credentials = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
+gc = gspread.authorize(credentials)
+sheet = gc.open_by_url("LINK_DO_SHEET")
+worksheet = sheet.worksheet('UNIDADES INTERLIGADAS')
+data = pd.DataFrame(worksheet.get_all_records())
 
-# Carregar os dados do Google Sheets
-@st.cache_data
-def load_data():
-    """Função para carregar dados da planilha do Google Sheets"""
-    return pd.read_csv(sheet_url)
+st.title("📊 Unidades Interligadas")
 
-# Carregar os dados na variável df
-df = load_data()
+# Filtros
+municipios = st.sidebar.multiselect("Filtrar Municípios", data['MUNICÍPIOS'].unique())
+if municipios:
+    data = data[data['MUNICÍPIOS'].isin(municipios)]
 
-# Verificar as colunas do DataFrame (para diagnóstico)
-st.write("Colunas do DataFrame:", df.columns)
+# KPIs
+st.metric("Total Hospitais", data.shape[0])
+st.metric("Com Justiça Aberta", data['JUSTIÇA ABERTA'].value_counts().get("Sim", 0))
+st.metric("Habilitação CRC OK", data['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0))
 
-# Configuração do Dashboard
-st.set_page_config(page_title="Painel Gerencial 01 NRC", layout="wide")
-st.title("📊 Painel Gerencial 01 NRC")
+# Gráficos
+fig = px.bar(data, x="MUNICÍPIOS", y="ÍNDICES IBGE", color="SITUAÇÃO GERAL", title="Distribuição por Municípios")
+st.plotly_chart(fig)
 
-# Filtros dinâmicos na barra lateral
-st.sidebar.header("🔎 Filtros")
-municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS"].unique(), default=df["MUNICÍPIOS"].unique())  # Usando o nome exato da coluna
-esferas = st.sidebar.multiselect("Selecione as Esferas", df["ESFERA"].unique(), default=df["ESFERA"].unique())  # Usando o nome exato da coluna
+pie_fig = px.pie(data, names="SITUAÇÃO GERAL", title="Situação Geral das Unidades")
+st.plotly_chart(pie_fig)
 
-# Aplicar filtros aos dados
-df_filtrado = df[df["MUNICÍPIOS"].isin(municipios) & df["ESFERA"].isin(esferas)]
-
-# Exibir os dados filtrados
-st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
-st.dataframe(df_filtrado)
-
-# Funções para gráficos de distribuição com Altair
-
-def plot_unidades_interligadas(df):
-    st.write("### 📊 Distribuição das Unidades Interligadas por Municípios")
-    if "MUNICÍPIOS" in df.columns and "ÍNDICES IBGE" in df.columns:
-        chart = alt.Chart(df).mark_bar().encode(
-            x='MUNICÍPIOS',
-            y='ÍNDICES IBGE',
-            tooltip=['MUNICÍPIOS', 'ÍNDICES IBGE']
-        ).properties(title="Distribuição por Índice IBGE")
-        st.altair_chart(chart, use_container_width=True)
-    else:
-        st.error("Campos 'MUNICÍPIOS' ou 'ÍNDICES IBGE' não encontrados nos dados.")
-
-def plot_status_formulario(df):
-    st.write("### 📊 Status de Recebimento de Formulários")
-    if "MUNICÍPIOS" in df.columns and "STATUS GERAL RECEBIMENTO" in df.columns:
-        chart = alt.Chart(df).mark_arc().encode(
-            theta='count():Q',
-            color='STATUS GERAL RECEBIMENTO',
-            tooltip=['STATUS GERAL RECEBIMENTO', 'count():Q']
-        ).properties(title="Status Geral de Recebimento")
-        st.altair_chart(chart, use_container_width=True)
-    else:
-        st.error("Campos 'MUNICÍPIOS' ou 'STATUS GERAL RECEBIMENTO' não encontrados nos dados.")
-
-def plot_municipios_instalacao(df):
-    st.write("### 📊 Municípios em Fase de Instalação")
-    if "MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):" in df.columns and "FASE" in df.columns:
-        chart = alt.Chart(df).mark_bar().encode(
-            x='MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):',
-            y='FASE',
-            tooltip=['MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):', 'FASE']
-        ).properties(title="Fase do Processo de Instalação")
-        st.altair_chart(chart, use_container_width=True)
-    else:
-        st.error("Campos 'MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):' ou 'FASE' não encontrados nos dados.")
-
-def plot_municipios_inviaveis(df):
-    st.write("### 📊 Municípios Inviáveis de Instalação")
-    if "MUNICÍPIOS" in df.columns and "SITUAÇÃO" in df.columns:
-        chart = alt.Chart(df).mark_bar().encode(
-            x='MUNICÍPIOS',
-            y='SITUAÇÃO',
-            tooltip=['MUNICÍPIOS', 'SITUAÇÃO']
-        ).properties(title="Situação dos Municípios Inviáveis")
-        st.altair_chart(chart, use_container_width=True)
-    else:
-        st.error("Campos 'MUNICÍPIOS' ou 'SITUAÇÃO' não encontrados nos dados.")
-
-# Seções do Dashboard
-tabs = [
-    "Unidades Interligadas", "Status Recebimento Formulário", "Municípios em Fase de Instalação",
-    "Municípios Inviáveis de Instalação"
-]
-
-# Barra lateral para escolha de seção
-selected_tab = st.sidebar.selectbox("Escolha a Seção", tabs)
-
-# Exibindo gráficos e informações com base na seção escolhida
-if selected_tab == "Unidades Interligadas":
-    plot_unidades_interligadas(df_filtrado)
-elif selected_tab == "Status Recebimento Formulário":
-    plot_status_formulario(df_filtrado)
-elif selected_tab == "Municípios em Fase de Instalação":
-    plot_municipios_instalacao(df_filtrado)
-elif selected_tab == "Municípios Inviáveis de Instalação":
-    plot_municipios_inviaveis(df_filtrado)
-
-# Baixar dados filtrados
-st.sidebar.download_button("📥 Baixar Dados Filtrados", df_filtrado.to_csv(index=False), "dados_filtrados.csv", "text/csv")
+# Download
+st.sidebar.download_button("📥 Baixar CSV", data.to_csv(index=False), file_name="unidades_interligadas.csv")
