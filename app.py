@@ -20,7 +20,9 @@ sheet_urls = {
     "MUNICIPIOS PARA INSTALAR": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20INSTALAR",
     "MUN INVIAVEIS DE INSTALACAO": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUN%20INVIAVEIS%20DE%20INSTALACAO",
     "PROVIMENTO 09": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=PROVIMENTO%2009",
-    "MUNICIPIOS PARA REATIVA": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20REATIVA"
+    "MUNICIPIOS PARA REATIVA": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20REATIVA",
+    "CIDADES COM SELO UNICEF": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=CIDADES%20COM%20SELO%20UNICEF",
+    "SUB-REGISTRO 2023": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=SUB-REGISTRO%202023"
 }
 
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
@@ -126,6 +128,22 @@ elif selected_tab == "MUNICIPIOS PARA REATIVA":
     st.dataframe(df)
 
     st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "municipios_reativa.csv")
+
+# ================== ABA 7: CIDADES COM SELO UNICEF ==================
+elif selected_tab == "CIDADES COM SELO UNICEF":
+    st.header("🏅 Cidades com Selo UNICEF")
+
+    st.dataframe(df)
+
+    st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "cidades_selo_unicef.csv")
+
+# ================== ABA 8: SUB-REGISTRO 2023 ==================
+elif selected_tab == "SUB-REGISTRO 2023":
+    st.header("📉 Sub-registro 2023")
+
+    st.dataframe(df)
+
+    st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "subregistro_2023.csv")
 
 # ================== MENSAGEM FINAL ==================
 st.success("✅ Dashboard atualizado com os dados das abas do Google Sheets!")
