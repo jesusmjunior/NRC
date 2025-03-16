@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -69,15 +70,11 @@ def show_data_summary(dataframe):
     with col3:
         st.metric("Última atualização", datetime.now().strftime("%d/%m/%Y"))
 
-
 # ================== ABA 7: MUNICÍPIOS PARA REATIVA ==================
-elif selected_tab == "MUNICÍPIOS PARA REATIVA":
+if selected_tab == "MUNICÍPIOS PARA REATIVA":
     st.header("🔄 Municípios para Reativação")
     try:
         col_municipios = "MUNICÍPIO"
-        col_hospital = "HOSPITAL/MATERNIDADE"
-        col_esfera = "ESFERA"
-        col_serventia = "SERVENTIA"
         col_situacao = "SITUAÇÃO"
 
         municipios = st.sidebar.multiselect(
