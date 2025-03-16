@@ -101,34 +101,35 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    # Limpeza dos nomes de colunas
+    # Limpeza preventiva
     df.columns = df.columns.str.strip()
 
-    # Mostrando para conferência
-    st.write("🔍 Colunas:", df.columns.tolist())
+    # Mostra as colunas encontradas (opcional para debug)
+    st.write("🧐 Colunas:", df.columns.tolist())
 
+    # Filtros corretos sem acento
     municipios = st.sidebar.multiselect(
         "Selecione os Municípios", 
-        df["MUNICÍPIOS"].unique(), 
-        default=df["MUNICÍPIOS"].unique()
+        df["MUNICIPIOS"].unique(), 
+        default=df["MUNICIPIOS"].unique()
     )
 
     situacoes = st.sidebar.multiselect(
         "Selecione a Situação", 
-        df["SITUAÇÃO"].unique(), 
-        default=df["SITUAÇÃO"].unique()
+        df["SITUACAO"].unique(), 
+        default=df["SITUACAO"].unique()
     )
 
     df_filtrado = df[
-        (df["MUNICÍPIOS"].isin(municipios)) &
-        (df["SITUAÇÃO"].isin(situacoes))
+        (df["MUNICIPIOS"].isin(municipios)) &
+        (df["SITUACAO"].isin(situacoes))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
 
-    # Gráfico Pizza
-    situacao_data = df_filtrado['SITUAÇÃO'].value_counts().reset_index()
+    # Gráfico Pizza - Distribuição das Situações
+    situacao_data = df_filtrado['SITUACAO'].value_counts().reset_index()
     situacao_data.columns = ['Situação', 'Total']
     pie_chart = alt.Chart(situacao_data).mark_arc().encode(
         theta=alt.Theta(field="Total", type="quantitative"),
