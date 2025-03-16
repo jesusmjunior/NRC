@@ -1,348 +1,343 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
-# Dashboard Configuration
-st.set_page_config(page_title="Healthcare System Dashboard", layout="wide")
-st.title("📊 Healthcare System Dashboard")
+# URL da planilha do Google Sheets (compartilhada publicamente)
+sheet_url = "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/edit?usp=sharing&ouid=113285550239608793612&rtpof=true&sd=true"
 
-# ================== GOOGLE SHEETS CONNECTION ==================
-@st.cache_resource
-def load_data(sheet_name):
-    """
-    Load data from Google Sheets with caching
-    """
-    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
-    gc = gspread.authorize(credentials)
-    sheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/edit")
-    worksheet = sheet.worksheet(sheet_name)
-    df = pd.DataFrame(worksheet.get_all_records())
-    return df
+# Converter a URL padrão para URL de exportação CSV
+# Formato: /spreadsheets/d/[ID]/export?format=csv
+sheet_id = sheet_url.split("/")[5]
+csv_export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
 
-# ================== VISUALIZATION FUNCTIONS ==================
-def create_bar_chart(data, x_column, y_column, color_column=None, title=""):
+# Carregar dados do Google Sheets
+@st.cache_data
+def carregar_dados(nome_planilha):
+    try:
+        # Em uma implementação real, precisaríamos acessar diferentes abas
+        # Esta é uma abordagem simplificada usando um único URL
+        df = pd.read_csv(csv_export_url)
+        return df
+    except Exception as e:
+        st.error(f"Erro ao carregar dados: {e}")
+        return pd.DataFrame()
+
+# Configuração do Dashboard
+st.set_page_config(page_title="Dashboard Sistema de Saúde", layout="wide")
+st.title("📊 Dashboard - Sistema de Saúde")
+
+# Carregar os dados
+df = carregar_dados("UNIDADES INTERLIGADAS")
+
+# Verificar se os dados foram carregados com sucesso
+if df.empty:
+    st.warning("Nenhum dado disponível. Verifique a URL da planilha do Google Sheets e certifique-se de que esteja acessível publicamente.")
+    st.stop()
+
+# ================== BARRA LATERAL - NAVEGAÇÃO ==================
+st.sidebar.title("📂 Navegação")
+abas = [
+    "Unidades Interligadas", 
+    "Status Recebimento Formulário", 
+    "Municípios para Instalar 1", 
+    "Municípios para Instalar 2", 
+    "Municípios Inviáveis", 
+    "Provimento 09 - TCT"
+]
+aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas)
+
+# ================== FUNÇÕES DE VISUALIZAÇÃO ==================
+def criar_grafico_barras(dados, coluna_x, coluna_y, coluna_cor=None, titulo=""):
     """
-    Create Altair bar chart
+    Criar gráfico de barras com Altair
     """
-    if color_column:
-        chart = alt.Chart(data).mark_bar().encode(
-            x=alt.X(f'{x_column}:N', sort='-y'),
-            y=f'{y_column}:Q',
-            color=f'{color_column}:N',
-            tooltip=[x_column, y_column, color_column]
+    if coluna_cor:
+        grafico = alt.Chart(dados).mark_bar().encode(
+            x=alt.X(f'{coluna_x}:N', sort='-y'),
+            y=f'{coluna_y}:Q',
+            color=f'{coluna_cor}:N',
+            tooltip=[coluna_x, coluna_y, coluna_cor]
         ).properties(
-            title=title,
+            title=titulo,
             height=400
         ).interactive()
     else:
-        chart = alt.Chart(data).mark_bar().encode(
-            x=alt.X(f'{x_column}:N', sort='-y'),
-            y=f'{y_column}:Q',
-            tooltip=[x_column, y_column]
+        grafico = alt.Chart(dados).mark_bar().encode(
+            x=alt.X(f'{coluna_x}:N', sort='-y'),
+            y=f'{coluna_y}:Q',
+            tooltip=[coluna_x, coluna_y]
         ).properties(
-            title=title,
+            title=titulo,
             height=400
         ).interactive()
     
-    return chart
+    return grafico
 
-def create_pie_chart(data, column, title=""):
+def criar_grafico_pizza(dados, coluna, titulo=""):
     """
-    Create Altair pie chart
+    Criar gráfico de pizza com Altair
     """
-    # Convert to format needed for pie chart
-    count_df = data[column].value_counts().reset_index()
-    count_df.columns = ['category', 'count']
+    # Converter para o formato necessário para o gráfico de pizza
+    df_contagem = dados[coluna].value_counts().reset_index()
+    df_contagem.columns = ['categoria', 'contagem']
     
-    # Create a pie chart using Altair
-    pie = alt.Chart(count_df).mark_arc().encode(
-        theta=alt.Theta(field="count", type="quantitative"),
-        color=alt.Color(field="category", type="nominal"),
-        tooltip=['category', 'count']
+    # Criar um gráfico de pizza usando Altair
+    pizza = alt.Chart(df_contagem).mark_arc().encode(
+        theta=alt.Theta(field="contagem", type="quantitative"),
+        color=alt.Color(field="categoria", type="nominal"),
+        tooltip=['categoria', 'contagem']
     ).properties(
-        title=title,
+        title=titulo,
         height=300,
         width=300
     )
     
-    return pie
+    return pizza
 
-def display_metrics(metrics_dict):
+def exibir_metricas(dict_metricas):
     """
-    Display metrics in columns
+    Exibir métricas em colunas
     """
-    cols = st.columns(len(metrics_dict))
-    for i, (label, value) in enumerate(metrics_dict.items()):
-        with cols[i]:
-            st.metric(label, value)
+    colunas = st.columns(len(dict_metricas))
+    for i, (rotulo, valor) in enumerate(dict_metricas.items()):
+        with colunas[i]:
+            st.metric(rotulo, valor)
 
-# ================== SIDEBAR NAVIGATION ==================
-st.sidebar.title("📂 Navigation")
-tabs = [
-    "Interconnected Units", 
-    "Form Receipt Status", 
-    "Municipalities to Install 1", 
-    "Municipalities to Install 2", 
-    "Non-viable Municipalities", 
-    "Provision 09 - TCT"
-]
-selected_tab = st.sidebar.radio("Select a tab:", tabs)
-
-# ================== TAB 1 - INTERCONNECTED UNITS ==================
-def show_interconnected_units():
-    st.header("🏥 Interconnected Units")
-    df = load_data("UNIDADES INTERLIGADAS")
-
-    # Filters
-    municipios = st.sidebar.multiselect(
-        "Select Municipalities:", 
-        df['MUNICÍPIOS'].unique(), 
-        default=df['MUNICÍPIOS'].unique()
-    )
-    df_filtered = df[df['MUNICÍPIOS'].isin(municipios)]
-
-    # KPIs
-    metrics = {
-        "Total Hospitals": df_filtered.shape[0],
-        "With Open Justice": df_filtered['JUSTIÇA ABERTA'].value_counts().get("Sim", 0),
-        "CRC Qualification OK": df_filtered['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0)
-    }
-    display_metrics(metrics)
+# ================== ABA 1 - UNIDADES INTERLIGADAS ==================
+def mostrar_unidades_interligadas():
+    st.header("🏥 Unidades Interligadas")
     
-    # Charts
+    # Aqui normalmente carregaríamos uma aba específica,
+    # mas estamos usando os dados já carregados no exemplo
+    df_aba = df
+    
+    # Verificar colunas esperadas
+    colunas_esperadas = [
+        'MUNICÍPIOS', 'HOSPITAL', 'DATA DA INSTALAÇÃO', 'ESFERA', 
+        'SERVENTIA', 'JUSTIÇA ABERTA', 'HABILITAÇÃO CRC', 
+        'SITUAÇÃO ATUAL', 'SITUAÇÃO GERAL', 'ÍNDICES IBGE', 'OBSERVAÇÕES'
+    ]
+    
+    # Verificar se as colunas existem e filtrar de acordo
+    colunas_ausentes = [col for col in colunas_esperadas if col not in df_aba.columns]
+    if colunas_ausentes:
+        st.warning(f"Colunas ausentes nos dados: {', '.join(colunas_ausentes)}")
+        st.write("Colunas disponíveis:", ", ".join(df_aba.columns))
+        st.dataframe(df_aba)
+        return
+    
+    # Filtros
+    municipios = st.sidebar.multiselect(
+        "Selecione os Municípios:", 
+        df_aba['MUNICÍPIOS'].unique(), 
+        default=df_aba['MUNICÍPIOS'].unique()
+    )
+    
+    esferas = st.sidebar.multiselect(
+        "Selecione as Esferas:", 
+        df_aba['ESFERA'].unique(), 
+        default=df_aba['ESFERA'].unique()
+    )
+    
+    df_filtrado = df_aba[
+        (df_aba['MUNICÍPIOS'].isin(municipios)) & 
+        (df_aba['ESFERA'].isin(esferas))
+    ]
+    
+    # KPIs
+    metricas = {
+        "Total de Hospitais": df_filtrado.shape[0],
+        "Com Justiça Aberta": df_filtrado['JUSTIÇA ABERTA'].value_counts().get("Sim", 0),
+        "Habilitação CRC OK": df_filtrado['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0)
+    }
+    exibir_metricas(metricas)
+    
+    # Gráficos
     col1, col2 = st.columns(2)
     
     with col1:
-        bar_chart = create_bar_chart(
-            df_filtered, 
+        grafico_barras = criar_grafico_barras(
+            df_filtrado, 
             "MUNICÍPIOS", 
             "ÍNDICES IBGE", 
             "SITUAÇÃO GERAL", 
-            "Distribution by Municipality"
+            "Distribuição por Municípios"
         )
-        st.altair_chart(bar_chart, use_container_width=True)
+        st.altair_chart(grafico_barras, use_container_width=True)
     
     with col2:
-        pie_chart = create_pie_chart(
-            df_filtered, 
+        grafico_pizza = criar_grafico_pizza(
+            df_filtrado, 
             "SITUAÇÃO GERAL", 
-            "General Status of Units"
+            "Situação Geral das Unidades"
         )
-        st.altair_chart(pie_chart, use_container_width=True)
+        st.altair_chart(grafico_pizza, use_container_width=True)
     
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df_filtered)
+    # Tabela e Download
+    st.subheader("Tabela de Dados")
+    st.dataframe(df_filtrado)
     st.download_button(
-        "📥 Download Data", 
-        df_filtered.to_csv(index=False), 
-        file_name="interconnected_units.csv"
+        "📥 Baixar Dados", 
+        df_filtrado.to_csv(index=False), 
+        file_name="unidades_interligadas.csv"
     )
 
-# ================== TAB 2 - FORM RECEIPT STATUS ==================
-def show_form_receipt_status():
-    st.header("📄 Form Receipt Status")
-    df = load_data("STATUS RECEB FORMULARIO")
-
-    # Filters
-    municipios = st.sidebar.multiselect(
-        "Select Municipalities:", 
-        df['MUNICÍPIOS'].unique(), 
-        default=df['MUNICÍPIOS'].unique()
-    )
-    df_filtered = df[df['MUNICÍPIOS'].isin(municipios)]
-
-    # KPIs
-    total = len(df_filtered)
-    received = df_filtered['STATUS GERAL RECEBIMENTO'].value_counts().get('Recebido', 0)
-    missing = total - received
+# ================== ABA 2 - STATUS RECEBIMENTO FORMULÁRIO ==================
+def mostrar_status_recebimento():
+    st.header("📄 Status de Recebimento de Formulário")
     
-    metrics = {
-        "Received": received,
-        "Missing": missing,
+    # Aqui usaríamos df_aba = carregar_dados("STATUS RECEB FORMULARIO")
+    # Mas estamos usando os mesmos dados para exemplo
+    df_aba = df
+    
+    # Verificar colunas esperadas
+    colunas_esperadas = [
+        'MUNICÍPIOS', 'HOSPITAL', 'SERVENTIA', 
+        'STATUS GERAL RECEBIMENTO', 'FALTANTES E ENVIADOS'
+    ]
+    
+    # Verificar se as colunas existem e filtrar de acordo
+    colunas_ausentes = [col for col in colunas_esperadas if col not in df_aba.columns]
+    if colunas_ausentes:
+        st.warning(f"Colunas ausentes nos dados: {', '.join(colunas_ausentes)}")
+        st.write("Colunas disponíveis:", ", ".join(df_aba.columns))
+        st.dataframe(df_aba)
+        return
+    
+    # Filtros
+    municipios = st.sidebar.multiselect(
+        "Selecione os Municípios:", 
+        df_aba['MUNICÍPIOS'].unique(), 
+        default=df_aba['MUNICÍPIOS'].unique()
+    )
+    
+    df_filtrado = df_aba[df_aba['MUNICÍPIOS'].isin(municipios)]
+    
+    # KPIs
+    total = len(df_filtrado)
+    recebidos = df_filtrado['STATUS GERAL RECEBIMENTO'].value_counts().get('Recebido', 0)
+    faltantes = total - recebidos
+    
+    metricas = {
+        "Recebidos": recebidos,
+        "Faltantes": faltantes,
         "Total": total
     }
-    display_metrics(metrics)
+    exibir_metricas(metricas)
     
-    # Chart
-    pie_chart = create_pie_chart(
-        df_filtered, 
+    # Gráfico
+    grafico_pizza = criar_grafico_pizza(
+        df_filtrado, 
         "STATUS GERAL RECEBIMENTO", 
-        "General Receipt Status"
+        "Status Geral de Recebimento"
     )
-    st.altair_chart(pie_chart, use_container_width=True)
+    st.altair_chart(grafico_pizza, use_container_width=True)
     
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df_filtered)
+    # Tabela e Download
+    st.subheader("Tabela de Dados")
+    st.dataframe(df_filtrado)
     st.download_button(
-        "📥 Download Data", 
-        df_filtered.to_csv(index=False), 
-        file_name="form_receipt_status.csv"
+        "📥 Baixar Dados", 
+        df_filtrado.to_csv(index=False), 
+        file_name="status_recebimento.csv"
     )
 
-# ================== TAB 3 - MUNICIPALITIES TO INSTALL 1 ==================
-def show_municipalities_to_install_1():
-    st.header("🏗️ Municipalities to Install - Prov. 07")
-    df = load_data("MUNICÍPIOS PARA INSTALAR")
-
-    # Filters
-    phase = st.sidebar.multiselect(
-        "Filter by Phase:", 
-        df['FASE'].unique(), 
-        default=df['FASE'].unique()
+# ================== ABA 3 - MUNICÍPIOS PARA INSTALAR 1 ==================
+def mostrar_municipios_instalar_1():
+    st.header("🏗️ Municípios para Instalar - Prov. 07")
+    
+    # Aqui usaríamos df_aba = carregar_dados("MUNICÍPIOS PARA INSTALAR")
+    # Mas estamos usando os mesmos dados para exemplo
+    df_aba = df
+    
+    # Verificar colunas esperadas
+    colunas_esperadas = [
+        'MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):', 
+        'FASE', 
+        'OBSERVAÇÃO'
+    ]
+    
+    # Verificar se as colunas existem e filtrar de acordo
+    colunas_ausentes = [col for col in colunas_esperadas if col not in df_aba.columns]
+    if colunas_ausentes:
+        st.warning(f"Colunas ausentes nos dados: {', '.join(colunas_ausentes)}")
+        st.write("Colunas disponíveis:", ", ".join(df_aba.columns))
+        st.dataframe(df_aba)
+        return
+    
+    # Filtros
+    fases = st.sidebar.multiselect(
+        "Filtrar por Fase:", 
+        df_aba['FASE'].unique(), 
+        default=df_aba['FASE'].unique()
     )
-    df_filtered = df[df['FASE'].isin(phase)]
     
-    # Charts
-    phase_counts = df_filtered['FASE'].value_counts().reset_index()
-    phase_counts.columns = ['FASE', 'count']
+    df_filtrado = df_aba[df_aba['FASE'].isin(fases)]
     
-    chart = alt.Chart(phase_counts).mark_bar().encode(
+    # Contagem por fase
+    contagem_fases = df_filtrado['FASE'].value_counts().reset_index()
+    contagem_fases.columns = ['FASE', 'contagem']
+    
+    # Gráfico
+    grafico = alt.Chart(contagem_fases).mark_bar().encode(
         x='FASE:N',
-        y='count:Q',
+        y='contagem:Q',
         color='FASE:N',
-        tooltip=['FASE', 'count']
+        tooltip=['FASE', 'contagem']
     ).properties(
-        title="Distribution by Phase",
+        title="Distribuição por Fase",
         height=400
     ).interactive()
     
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(grafico, use_container_width=True)
     
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df_filtered)
+    # Tabela e Download
+    st.subheader("Tabela de Dados")
+    st.dataframe(df_filtrado)
     st.download_button(
-        "📥 Download Data", 
-        df_filtered.to_csv(index=False), 
-        file_name="municipalities_to_install.csv"
+        "📥 Baixar Dados", 
+        df_filtrado.to_csv(index=False), 
+        file_name="municipios_instalar.csv"
     )
 
-# ================== TAB 4 - MUNICIPALITIES TO INSTALL 2 ==================
-def show_municipalities_to_install_2():
-    st.header("🏗️ Municipalities to Install - Prov. 07 (Part 2)")
-    df = load_data("MUNICÍPIOS PARA INSTALAR 2")
-
-    # Filters
-    phase = st.sidebar.multiselect(
-        "Filter by Phase:", 
-        df['FASE'].unique(), 
-        default=df['FASE'].unique()
+# ================== ABA 4 - MUNICÍPIOS PARA INSTALAR 2 ==================
+def mostrar_municipios_instalar_2():
+    st.header("🏗️ Municípios para Instalar - Prov. 07 (Parte 2)")
+    
+    # Aqui usaríamos df_aba = carregar_dados("MUNICÍPIOS PARA INSTALAR 2")
+    # Mas estamos usando os mesmos dados para exemplo
+    df_aba = df
+    
+    # Verificar colunas esperadas
+    colunas_esperadas = [
+        'MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):', 
+        'FASE', 
+        'OBSERVAÇÃO'
+    ]
+    
+    # Verificar se as colunas existem e filtrar de acordo
+    colunas_ausentes = [col for col in colunas_esperadas if col not in df_aba.columns]
+    if colunas_ausentes:
+        st.warning(f"Colunas ausentes nos dados: {', '.join(colunas_ausentes)}")
+        st.write("Colunas disponíveis:", ", ".join(df_aba.columns))
+        st.dataframe(df_aba)
+        return
+    
+    # Filtros
+    fases = st.sidebar.multiselect(
+        "Filtrar por Fase:", 
+        df_aba['FASE'].unique(), 
+        default=df_aba['FASE'].unique()
     )
-    df_filtered = df[df['FASE'].isin(phase)]
     
-    # Charts
-    phase_counts = df_filtered['FASE'].value_counts().reset_index()
-    phase_counts.columns = ['FASE', 'count']
+    df_filtrado = df_aba[df_aba['FASE'].isin(fases)]
     
-    chart = alt.Chart(phase_counts).mark_bar().encode(
+    # Contagem por fase
+    contagem_fases = df_filtrado['FASE'].value_counts().reset_index()
+    contagem_fases.columns = ['FASE', 'contagem']
+    
+    # Gráfico
+    grafico = alt.Chart(contagem_fases).mark_bar().encode(
         x='FASE:N',
-        y='count:Q',
-        color='FASE:N',
-        tooltip=['FASE', 'count']
-    ).properties(
-        title="Distribution by Phase",
-        height=400
-    ).interactive()
-    
-    st.altair_chart(chart, use_container_width=True)
-    
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df_filtered)
-    st.download_button(
-        "📥 Download Data", 
-        df_filtered.to_csv(index=False), 
-        file_name="municipalities_to_install_2.csv"
-    )
-
-# ================== TAB 5 - NON-VIABLE MUNICIPALITIES ==================
-def show_nonviable_municipalities():
-    st.header("🚫 Non-viable Municipalities for Installation")
-    df = load_data("MUN. INVIÁVEIS DE INSTALAÇÃO")
-    
-    # Charts
-    situation_counts = df['SITUAÇÃO'].value_counts().reset_index()
-    situation_counts.columns = ['SITUAÇÃO', 'count']
-    
-    chart = alt.Chart(situation_counts).mark_bar().encode(
-        x='SITUAÇÃO:N',
-        y='count:Q',
-        color='SITUAÇÃO:N',
-        tooltip=['SITUAÇÃO', 'count']
-    ).properties(
-        title="Distribution by Situation",
-        height=400
-    ).interactive()
-    
-    st.altair_chart(chart, use_container_width=True)
-    
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df)
-    st.download_button(
-        "📥 Download Data", 
-        df.to_csv(index=False), 
-        file_name="nonviable_municipalities.csv"
-    )
-
-# ================== TAB 6 - PROVISION 09 ==================
-def show_provision_09():
-    st.header("📜 Provision 09 - Technical Cooperation Agreement (TCT)")
-    df = load_data("PROVIMENTO 09")
-
-    signed = df['MUNICÍPIOS QUE ASSINARAM O TCT'].dropna().count()
-    will_sign = df['MUNICÍPIOS VÃO ASSINAR O TCT'].dropna().count()
-
-    # KPIs
-    metrics = {
-        "Signed TCT": signed,
-        "Will Sign": will_sign
-    }
-    display_metrics(metrics)
-    
-    # Chart
-    tct_df = pd.DataFrame({
-        'Status': ['Signed', 'Will Sign'],
-        'Total': [signed, will_sign]
-    })
-    
-    chart = alt.Chart(tct_df).mark_arc().encode(
-        theta=alt.Theta(field="Total", type="quantitative"),
-        color=alt.Color(field="Status", type="nominal"),
-        tooltip=['Status', 'Total']
-    ).properties(
-        title="Technical Cooperation Agreement Status",
-        height=400,
-        width=400
-    )
-    
-    st.altair_chart(chart, use_container_width=True)
-    
-    # Table and Download
-    st.subheader("Data Table")
-    st.dataframe(df)
-    st.download_button(
-        "📥 Download Data", 
-        df.to_csv(index=False), 
-        file_name="provision09_tct.csv"
-    )
-
-# ================== MAIN APP LOGIC ==================
-# Display selected tab
-if selected_tab == "Interconnected Units":
-    show_interconnected_units()
-elif selected_tab == "Form Receipt Status":
-    show_form_receipt_status()
-elif selected_tab == "Municipalities to Install 1":
-    show_municipalities_to_install_1()
-elif selected_tab == "Municipalities to Install 2":
-    show_municipalities_to_install_2()
-elif selected_tab == "Non-viable Municipalities":
-    show_nonviable_municipalities()
-elif selected_tab == "Provision 09 - TCT":
-    show_provision_09()
+        y='contagem:Q',
+        color='FASE:N
