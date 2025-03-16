@@ -31,11 +31,6 @@ selected_tab = st.sidebar.radio("Selecione uma aba:", tabs)
 # ================== CARREGAR DADOS DA ABA SELECIONADA ==================
 df = load_data(sheet_urls[selected_tab])
 
-# ================== EXIBIR COLUNAS PARA DEBUG ==================
-if selected_tab in ["MUNICIPIOS PARA REATIVA"]:
-    st.write("### 🔍 Colunas disponíveis:")
-    st.write(df.columns.tolist())
-
 # ================== ABA 1: UNIDADES INTERLIGADAS ==================
 if selected_tab == "UNIDADES INTERLIGADAS":
     st.header("🏥 Unidades Interligadas")
@@ -120,29 +115,17 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
 elif selected_tab == "PROVIMENTO 09":
     st.header("📜 Provimento 09")
 
-    df_filtrado = df
-    st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
-    st.dataframe(df_filtrado)
+    st.dataframe(df)
 
-    st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "provimento_09.csv")
+    st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "provimento_09.csv")
 
 # ================== ABA 6: MUNICIPIOS PARA REATIVA ==================
 elif selected_tab == "MUNICIPIOS PARA REATIVA":
     st.header("🔄 Municípios para Reativação")
 
-    # Visualiza colunas para garantir nomes corretos
-    municipios_col = df.columns[0]  # Primeira coluna como padrão temporário
+    st.dataframe(df)
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df[municipios_col].unique(), default=df[municipios_col].unique())
-
-    df_filtrado = df[
-        (df[municipios_col].isin(municipios))
-    ]
-
-    st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
-    st.dataframe(df_filtrado)
-
-    st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_reativa.csv")
+    st.sidebar.download_button("📥 Baixar Dados", df.to_csv(index=False), "municipios_reativa.csv")
 
 # ================== MENSAGEM FINAL ==================
 st.success("✅ Dashboard atualizado com os dados das abas do Google Sheets!")
