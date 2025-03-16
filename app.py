@@ -82,10 +82,15 @@ elif selected_tab == "STATUS RECEB FORMULARIO":
 elif selected_tab == "MUNICIPIOS PARA INSTALAR":
     st.header("🔹 Municípios para Instalar")
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07)"].unique(), default=df["MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07)"].unique())
+    # Mostrar colunas disponíveis para debug
+    st.write("### 🔍 Colunas disponíveis:")
+    st.write(df.columns.tolist())
+
+    # Usando a primeira coluna como referência até validar
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df.iloc[:, 0].unique(), default=df.iloc[:, 0].unique())
 
     df_filtrado = df[
-        (df["MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07)"].isin(municipios))
+        (df.iloc[:, 0].isin(municipios))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
