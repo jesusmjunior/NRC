@@ -10,6 +10,7 @@ st.title("📊 Dashboard de Unidades Interligadas")
 @st.cache_data
 def load_data(sheet_url):
     df = pd.read_csv(sheet_url)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]  # Remove colunas Unnamed
     return df
 
 # ================== URLs das abas ==================
@@ -82,13 +83,10 @@ elif selected_tab == "STATUS RECEB FORMULARIO":
 elif selected_tab == "MUNICIPIOS PARA INSTALAR":
     st.header("🔹 Municípios para Instalar")
 
-    st.write("### 🔍 Colunas disponíveis:")
-    st.write(df.columns.tolist())
-
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df.iloc[:, 0].unique(), default=df.iloc[:, 0].unique())
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS"].unique(), default=df["MUNICÍPIOS"].unique())
 
     df_filtrado = df[
-        (df.iloc[:, 0].isin(municipios))
+        (df["MUNICÍPIOS"].isin(municipios))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
@@ -100,13 +98,10 @@ elif selected_tab == "MUNICIPIOS PARA INSTALAR":
 elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.header("🔒 Municípios Inviáveis para Instalação")
 
-    st.write("### 🔍 Colunas disponíveis:")
-    st.write(df.columns.tolist())
-
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df.iloc[:, 0].unique(), default=df.iloc[:, 0].unique())
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS"].unique(), default=df["MUNICÍPIOS"].unique())
 
     df_filtrado = df[
-        (df.iloc[:, 0].isin(municipios))
+        (df["MUNICÍPIOS"].isin(municipios))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
