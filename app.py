@@ -31,6 +31,11 @@ selected_tab = st.sidebar.radio("Selecione uma aba:", tabs)
 # ================== CARREGAR DADOS DA ABA SELECIONADA ==================
 df = load_data(sheet_urls[selected_tab])
 
+# ================== EXIBIR COLUNAS PARA DEBUG ==================
+if selected_tab in ["MUNICIPIOS PARA REATIVA"]:
+    st.write("### 🔍 Colunas disponíveis:")
+    st.write(df.columns.tolist())
+
 # ================== ABA 1: UNIDADES INTERLIGADAS ==================
 if selected_tab == "UNIDADES INTERLIGADAS":
     st.header("🏥 Unidades Interligadas")
@@ -115,12 +120,7 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
 elif selected_tab == "PROVIMENTO 09":
     st.header("📜 Provimento 09")
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS QUE ASSINARAM O TCT"].unique(), default=df["MUNICÍPIOS QUE ASSINARAM O TCT"].unique())
-
-    df_filtrado = df[
-        (df["MUNICÍPIOS QUE ASSINARAM O TCT"].isin(municipios))
-    ]
-
+    df_filtrado = df
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
     st.dataframe(df_filtrado)
 
@@ -130,12 +130,13 @@ elif selected_tab == "PROVIMENTO 09":
 elif selected_tab == "MUNICIPIOS PARA REATIVA":
     st.header("🔄 Municípios para Reativação")
 
-    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIO"].unique(), default=df["MUNICÍPIO"].unique())
-    situacao = st.sidebar.multiselect("Situação", df["SITUAÇÃO"].unique(), default=df["SITUAÇÃO"].unique())
+    # Visualiza colunas para garantir nomes corretos
+    municipios_col = df.columns[0]  # Primeira coluna como padrão temporário
+
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df[municipios_col].unique(), default=df[municipios_col].unique())
 
     df_filtrado = df[
-        (df["MUNICÍPIO"].isin(municipios)) &
-        (df["SITUAÇÃO"].isin(situacao))
+        (df[municipios_col].isin(municipios))
     ]
 
     st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
