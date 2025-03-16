@@ -18,7 +18,9 @@ sheet_urls = {
     "UNIDADES INTERLIGADAS": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=UNIDADES%20INTERLIGADAS",
     "STATUS RECEB FORMULARIO": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=STATUS%20RECEB%20FORMULARIO",
     "MUNICIPIOS PARA INSTALAR": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20INSTALAR",
-    "MUN INVIAVEIS DE INSTALACAO": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUN%20INVIAVEIS%20DE%20INSTALACAO"
+    "MUN INVIAVEIS DE INSTALACAO": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUN%20INVIAVEIS%20DE%20INSTALACAO",
+    "PROVIMENTO 09": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=PROVIMENTO%2009",
+    "MUNICIPIOS PARA REATIVA": "https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/gviz/tq?tqx=out:csv&sheet=MUNICIPIOS%20PARA%20REATIVA"
 }
 
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
@@ -108,6 +110,38 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
     st.dataframe(df_filtrado)
 
     st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_inviaveis.csv")
+
+# ================== ABA 5: PROVIMENTO 09 ==================
+elif selected_tab == "PROVIMENTO 09":
+    st.header("📜 Provimento 09")
+
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIOS QUE ASSINARAM O TCT"].unique(), default=df["MUNICÍPIOS QUE ASSINARAM O TCT"].unique())
+
+    df_filtrado = df[
+        (df["MUNICÍPIOS QUE ASSINARAM O TCT"].isin(municipios))
+    ]
+
+    st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
+    st.dataframe(df_filtrado)
+
+    st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "provimento_09.csv")
+
+# ================== ABA 6: MUNICIPIOS PARA REATIVA ==================
+elif selected_tab == "MUNICIPIOS PARA REATIVA":
+    st.header("🔄 Municípios para Reativação")
+
+    municipios = st.sidebar.multiselect("Selecione os Municípios", df["MUNICÍPIO"].unique(), default=df["MUNICÍPIO"].unique())
+    situacao = st.sidebar.multiselect("Situação", df["SITUAÇÃO"].unique(), default=df["SITUAÇÃO"].unique())
+
+    df_filtrado = df[
+        (df["MUNICÍPIO"].isin(municipios)) &
+        (df["SITUAÇÃO"].isin(situacao))
+    ]
+
+    st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
+    st.dataframe(df_filtrado)
+
+    st.sidebar.download_button("📥 Baixar Dados", df_filtrado.to_csv(index=False), "municipios_reativa.csv")
 
 # ================== MENSAGEM FINAL ==================
 st.success("✅ Dashboard atualizado com os dados das abas do Google Sheets!")
