@@ -1,18 +1,17 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-import numpy as np
 from datetime import datetime
 import traceback
 
 # ================== CONFIGURAÇÃO DO DASHBOARD ==================
 st.set_page_config(
-    page_title="Dashboard de Unidades Interligadas", 
+    page_title="Dashboard UI - Parte 2", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-st.title("📊 Dashboard de Unidades Interligadas")
+st.title("📊 Dashboard UI - Parte 2")
 st.caption(f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 
 # ================== CARREGAR DADOS DO GOOGLE SHEETS ==================
@@ -33,10 +32,10 @@ sheet_id = "1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
 
 sheet_urls = {
-    "UNIDADES INTERLIGADAS": f"{base_url}UNIDADES%20INTERLIGADAS",
-    "STATUS RECEB FORMULARIO": f"{base_url}STATUS%20RECEB%20FORMULARIO",
-    "MUNICIPIOS PARA INSTALAR": f"{base_url}MUNICIPIOS%20PARA%20INSTALAR",
-    "PROVIMENTO 09": f"{base_url}PROVIMENTO%2009"
+    "MUN. INVIÁVEIS DE INSTALAÇÃO": f"{base_url}MUN.%20INVI%C3%81VEIS%20DE%20INSTALA%C3%87%C3%83O",
+    "MUNICÍPIOS PARA REATIVA": f"{base_url}MUNIC%C3%8DPIOS%20PARA%20REATIVA",
+    "TAB ACOMPANHAMENTO ARTICULAÇÃO": f"{base_url}TAB%20ACOMPANHAMENTO%20ARTICULA%C3%87%C3%83O",
+    "ÍNDICES DE SUB-REGISTRO": f"{base_url}%C3%8DNDICES%20DE%20SUB-REGISTRO"
 }
 
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
@@ -71,155 +70,108 @@ def show_data_summary(dataframe):
     with col3:
         st.metric("Última atualização", datetime.now().strftime("%d/%m/%Y"))
 
-def dynamic_filters(df):
-    st.sidebar.markdown("### 🔍 Filtros Avançados")
-    filtered_df = df.copy()
-    
-    for column in df.columns:
-        if pd.api.types.is_numeric_dtype(df[column]):
-            min_val = int(df[column].min())
-            max_val = int(df[column].max())
-            selected_range = st.sidebar.slider(f"{column}", min_val, max_val, (min_val, max_val))
-            filtered_df = filtered_df[(df[column] >= selected_range[0]) & (df[column] <= selected_range[1])]
-        
-        elif pd.api.types.is_datetime64_any_dtype(df[column]):
-            pass  # Caso queira lidar com datas no futuro
-        
-        else:
-            unique_vals = df[column].dropna().unique()
-            selected_vals = st.sidebar.multiselect(f"{column}", unique_vals, default=unique_vals)
-            filtered_df = filtered_df[df[column].isin(selected_vals)]
-    
-    return filtered_df
-
-# ================== ABA 1: UNIDADES INTERLIGADAS ==================
-if selected_tab == "UNIDADES INTERLIGADAS":
-    st.header("🏥 Unidades Interligadas")
-    
+# ================== ABA 5: MUN. INVIÁVEIS DE INSTALAÇÃO ==================
+if selected_tab == "MUN. INVIÁVEIS DE INSTALAÇÃO":
+    st.header("🚫 Municípios Inviáveis de Instalação")
     try:
-        df_filtrado = dynamic_filters(df)
+        col_municipios = "MUNICÍPIOS"
+        col_situacao = "SITUAÇÃO"
+        municipios = st.sidebar.multiselect(
+            "Selecione os Municípios", 
+            df[col_municipios].unique(), 
+            default=df[col_municipios].unique()
+        )
+        situacao = st.sidebar.multiselect(
+            "Situação", 
+            df[col_situacao].unique(), 
+            default=df[col_situacao].unique()
+        )
+        df_filtrado = df[(df[col_municipios].isin(municipios)) & (df[col_situacao].isin(situacao))]
 
         show_data_summary(df_filtrado)
         st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
         st.dataframe(df_filtrado, use_container_width=True)
 
-        col_municipios = "MUNICÍPIOS" if "MUNICÍPIOS" in df.columns else "MUNICIPIOS"
-        col_situacao = "SITUAÇÃO GERAL" if "SITUAÇÃO GERAL" in df.columns else "SITUACAO GERAL"
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            pie_data = df_filtrado[col_situacao].value_counts().reset_index()
-            pie_data.columns = ['Situação Geral', 'Total']
-            pie_chart = alt.Chart(pie_data).mark_arc().encode(
-                theta=alt.Theta(field="Total", type="quantitative"),
-                color=alt.Color(field="Situação Geral", type="nominal"),
-                tooltip=['Situação Geral', 'Total']
-            ).properties(
-                title="Distribuição da Situação Geral",
-                height=300
-            )
-            st.altair_chart(pie_chart, use_container_width=True)
-        with col2:
-            mun_count = df_filtrado[col_municipios].value_counts().reset_index()
-            mun_count.columns = ['Município', 'Total']
-            if not mun_count.empty:
-                bar_chart = alt.Chart(mun_count).mark_bar().encode(
-                    x=alt.X('Município:N', sort='-y'),
-                    y=alt.Y('Total:Q'),
-                    color=alt.value('#1f77b4'),
-                    tooltip=['Município', 'Total']
-                ).properties(
-                    title="Unidades por Município",
-                    height=300
-                )
-                st.altair_chart(bar_chart, use_container_width=True)
-
-        create_download_button(df_filtrado, "unidades_interligadas.csv")
+        create_download_button(df_filtrado, "municipios_inviaveis.csv")
         
     except Exception as e:
-        st.error(f"Erro ao processar a aba UNIDADES INTERLIGADAS: {str(e)}")
+        st.error(f"Erro ao processar a aba: {str(e)}")
         st.error(traceback.format_exc())
 
-# ================== ABA 2: STATUS RECEB FORMULARIO ==================
-elif selected_tab == "STATUS RECEB FORMULARIO":
-    st.header("📄 Status Recebimento Formulário")
-    
+# ================== ABA 7: MUNICÍPIOS PARA REATIVA ==================
+elif selected_tab == "MUNICÍPIOS PARA REATIVA":
+    st.header("🔄 Municípios para Reativação")
     try:
-        df_filtrado = dynamic_filters(df)
+        col_municipios = "MUNICÍPIO"
+        col_hospital = "HOSPITAL/MATERNIDADE"
+        col_esfera = "ESFERA"
+        col_serventia = "SERVENTIA"
+        col_situacao = "SITUAÇÃO"
+
+        municipios = st.sidebar.multiselect(
+            "Selecione os Municípios", df[col_municipios].unique(), default=df[col_municipios].unique()
+        )
+        situacao = st.sidebar.multiselect(
+            "Situação", df[col_situacao].unique(), default=df[col_situacao].unique()
+        )
+
+        df_filtrado = df[(df[col_municipios].isin(municipios)) & (df[col_situacao].isin(situacao))]
 
         show_data_summary(df_filtrado)
         st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
         st.dataframe(df_filtrado, use_container_width=True)
 
-        col_municipios = "MUNICÍPIOS" if "MUNICÍPIOS" in df.columns else "MUNICIPIOS"
-        col_status = "STATUS GERAL RECEBIMENTO"
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            pie_data = df_filtrado[col_status].value_counts().reset_index()
-            pie_data.columns = ['Status', 'Total']
-            pie_chart = alt.Chart(pie_data).mark_arc().encode(
-                theta=alt.Theta(field="Total", type="quantitative"),
-                color=alt.Color(field="Status", type="nominal"),
-                tooltip=['Status', 'Total']
-            ).properties(
-                title="Distribuição do Status de Recebimento",
-                height=300
-            )
-            st.altair_chart(pie_chart, use_container_width=True)
-        with col2:
-            mun_count = df_filtrado[col_municipios].value_counts().reset_index()
-            mun_count.columns = ['Município', 'Total']
-            if not mun_count.empty:
-                bar_chart = alt.Chart(mun_count).mark_bar().encode(
-                    x=alt.X('Município:N', sort='-y'),
-                    y=alt.Y('Total:Q'),
-                    color=alt.value('#1f77b4'),
-                    tooltip=['Município', 'Total']
-                ).properties(
-                    title="Registros por Município",
-                    height=300
-                )
-                st.altair_chart(bar_chart, use_container_width=True)
-
-        create_download_button(df_filtrado, "status_recebimento.csv")
+        create_download_button(df_filtrado, "municipios_reativa.csv")
         
     except Exception as e:
-        st.error(f"Erro ao processar a aba STATUS RECEB FORMULARIO: {str(e)}")
+        st.error(f"Erro ao processar a aba: {str(e)}")
         st.error(traceback.format_exc())
 
-# ================== ABA 3: MUNICIPIOS PARA INSTALAR ==================
-elif selected_tab == "MUNICIPIOS PARA INSTALAR":
-    st.header("🔹 Municípios para Instalar")
-    
+# ================== ABA 8: TAB ACOMPANHAMENTO ARTICULAÇÃO ==================
+elif selected_tab == "TAB ACOMPANHAMENTO ARTICULAÇÃO":
+    st.header("📑 Acompanhamento da Articulação")
     try:
-        df_filtrado = dynamic_filters(df)
+        col_situacao = "SITUAÇÃO"
+        col_municipios = "MUNICÍPIOS"
+
+        situacao = st.sidebar.multiselect(
+            "Selecione a Situação", df[col_situacao].unique(), default=df[col_situacao].unique()
+        )
+        municipios = st.sidebar.multiselect(
+            "Selecione os Municípios", df[col_municipios].unique(), default=df[col_municipios].unique()
+        )
+
+        df_filtrado = df[(df[col_situacao].isin(situacao)) & (df[col_municipios].isin(municipios))]
 
         show_data_summary(df_filtrado)
         st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
         st.dataframe(df_filtrado, use_container_width=True)
 
-        create_download_button(df_filtrado, "municipios_para_instalar.csv")
+        create_download_button(df_filtrado, "acompanhamento_articulacao.csv")
         
     except Exception as e:
-        st.error(f"Erro ao processar a aba MUNICIPIOS PARA INSTALAR: {str(e)}")
+        st.error(f"Erro ao processar a aba: {str(e)}")
         st.error(traceback.format_exc())
 
-# ================== ABA 5: PROVIMENTO 09 ==================
-elif selected_tab == "PROVIMENTO 09":
-    st.header("📜 Provimento 09 - TCT Assinados")
-    
+# ================== ABA 9: ÍNDICES DE SUB-REGISTRO ==================
+elif selected_tab == "ÍNDICES DE SUB-REGISTRO":
+    st.header("📉 Índices de Sub-registro")
     try:
-        df_filtrado = dynamic_filters(df)
+        col_cidade = "CIDADE"
+        cidades = st.sidebar.multiselect(
+            "Selecione as Cidades", df[col_cidade].unique(), default=df[col_cidade].unique()
+        )
+
+        df_filtrado = df[df[col_cidade].isin(cidades)]
 
         show_data_summary(df_filtrado)
         st.write(f"### 📌 {df_filtrado.shape[0]} Registros Selecionados")
         st.dataframe(df_filtrado, use_container_width=True)
 
-        create_download_button(df_filtrado, "provimento_09.csv")
+        create_download_button(df_filtrado, "indices_subregistro.csv")
         
     except Exception as e:
-        st.error(f"Erro ao processar a aba PROVIMENTO 09: {str(e)}")
+        st.error(f"Erro ao processar a aba: {str(e)}")
         st.error(traceback.format_exc())
 
 # ================== MENSAGEM FINAL ==================
