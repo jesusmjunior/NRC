@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import altair as alt
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -29,11 +29,23 @@ col1.metric("Total Hospitais", df_filtered.shape[0])
 col2.metric("Com Justiça Aberta", df_filtered['JUSTIÇA ABERTA'].value_counts().get("Sim", 0))
 col3.metric("Habilitação CRC OK", df_filtered['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0))
 
-fig = px.bar(df_filtered.sort_values('ÍNDICES IBGE', ascending=False), x="MUNICÍPIOS", y="ÍNDICES IBGE", color="SITUAÇÃO GERAL", title="Distribuição por Municípios")
-st.plotly_chart(fig)
+bar_chart = alt.Chart(df_filtered).mark_bar().encode(
+    x=alt.X("MUNICÍPIOS", sort='-y'),
+    y="ÍNDICES IBGE",
+    color="SITUAÇÃO GERAL"
+).properties(title="Distribuição por Municípios", width=700)
 
-pie_fig = px.pie(df_filtered, names="SITUAÇÃO GERAL", title="Situação Geral")
-st.plotly_chart(pie_fig)
+st.altair_chart(bar_chart, use_container_width=True)
+
+pie_data = df_filtered['SITUAÇÃO GERAL'].value_counts().reset_index()
+pie_data.columns = ['Situação Geral', 'Total']
+
+pie_chart = alt.Chart(pie_data).mark_arc().encode(
+    theta=alt.Theta(field="Total", type="quantitative"),
+    color=alt.Color(field="Situação Geral", type="nominal")
+).properties(title="Situação Geral")
+
+st.altair_chart(pie_chart, use_container_width=True)
 
 st.sidebar.download_button("📥 Baixar Dados", df_filtered.to_csv(index=False), file_name="unidades_interligadas.csv")
 
@@ -63,8 +75,14 @@ fase = st.multiselect("Fase de Instalação", df_instalacao['FASE'].unique(), de
 df_instalacao_filtered = df_instalacao[df_instalacao['FASE'].isin(fase)]
 
 st.dataframe(df_instalacao_filtered)
-fig_fase = px.bar(df_instalacao_filtered, x="MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):", color="FASE", title="Distribuição por Fase")
-st.plotly_chart(fig_fase)
+
+bar_fase = alt.Chart(df_instalacao_filtered).mark_bar().encode(
+    x="MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):",
+    color="FASE"
+).properties(title="Distribuição por Fase")
+
+st.altair_chart(bar_fase, use_container_width=True)
+
 st.sidebar.download_button("📥 Baixar Municípios Instalação", df_instalacao_filtered.to_csv(index=False), file_name="municipios_instalacao.csv")
 
 # -------------------- ABA 5: MUN. INVIÁVEIS DE INSTALAÇÃO --------------------
@@ -73,8 +91,17 @@ worksheet_inv = sheet.worksheet('MUN. INVIÁVEIS DE INSTALAÇÃO')
 df_inv = pd.DataFrame(worksheet_inv.get_all_records())
 
 st.dataframe(df_inv)
-fig_inv = px.pie(df_inv, names="SITUAÇÃO", title="Situação dos Municípios Inváiveis")
-st.plotly_chart(fig_inv)
+
+pie_inv = df_inv['SITUAÇÃO'].value_counts().reset_index()
+pie_inv.columns = ['Situação', 'Total']
+
+pie_chart_inv = alt.Chart(pie_inv).mark_arc().encode(
+    theta=alt.Theta(field="Total", type="quantitative"),
+    color=alt.Color(field="Situação", type="nominal")
+).properties(title="Situação dos Municípios Inváiveis")
+
+st.altair_chart(pie_chart_inv, use_container_width=True)
+
 st.sidebar.download_button("📥 Baixar Municípios Inváiveis", df_inv.to_csv(index=False), file_name="municipios_inviaveis.csv")
 
 # -------------------- ABA 6: PROVIMENTO 09 --------------------
