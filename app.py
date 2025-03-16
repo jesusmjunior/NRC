@@ -337,7 +337,7 @@ elif selected_tab == "MUN INVIAVEIS DE INSTALACAO":
             situacao_data = df_filtrado[col_situacao].value_counts().reset_index()
             situacao_data.columns = ['Situação', 'Total']
             
-            pie_chart = alt.Chart("MUN INVIAVEIS DE INSTALACAO"
+            pie_chart = alt.Chart("MUN INVIAVEIS DE INSTALACAO")
         pie_chart = alt.Chart(situacao_data).mark_arc().encode(
             theta=alt.Theta(field="Total", type="quantitative"),
             color=alt.Color(field="Situação", type="nominal"),
