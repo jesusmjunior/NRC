@@ -1,121 +1,136 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.express as px
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-st.set_page_config(page_title="Unidades Interligadas", layout="wide")
-st.title("📌 Dashboard Unidades Interligadas")
+# Configuração do Dashboard
+st.set_page_config(page_title="Dashboard Sistema Saúde", layout="wide")
+st.title("📊 Dashboard - Sistema de Saúde")
 
-# Conexão Google Sheets
-scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
-gc = gspread.authorize(credentials)
+# ================== CONEXÃO COM GOOGLE SHEETS ==================
+@st.cache_resource
+def load_data(sheet_name):
+    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
+    gc = gspread.authorize(credentials)
+    sheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/edit")
+    worksheet = sheet.worksheet(sheet_name)
+    df = pd.DataFrame(worksheet.get_all_records())
+    return df
 
-sheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq/edit")
+# ================== BARRA LATERAL - NAVEGAÇÃO ==================
+st.sidebar.title("📂 Navegação")
+tabs = ["Unidades Interligadas", 
+        "Status Recebimento Formulário", 
+        "Municípios para Instalar 1", 
+        "Municípios para Instalar 2", 
+        "Municípios Inviáveis", 
+        "Provimento 09 - TCT"]
+selected_tab = st.sidebar.radio("Selecione uma aba:", tabs)
 
-# -------------------- ABA 1: UNIDADES INTERLIGADAS --------------------
-st.sidebar.title("🔎 Filtros - Unidades Interligadas")
-worksheet_ui = sheet.worksheet('UNIDADES INTERLIGADAS')
-df_ui = pd.DataFrame(worksheet_ui.get_all_records())
+# ================== ABA 1 - UNIDADES INTERLIGADAS ==================
+if selected_tab == "Unidades Interligadas":
+    st.header("🏥 Unidades Interligadas")
+    df = load_data("UNIDADES INTERLIGADAS")
 
-municipios = st.sidebar.multiselect("Selecione os Municípios", df_ui['MUNICÍPIOS'].unique(), default=df_ui['MUNICÍPIOS'].unique())
+    municipios = st.sidebar.multiselect("Selecione os Municípios:", df['MUNICÍPIOS'].unique(), default=df['MUNICÍPIOS'].unique())
+    df = df[df['MUNICÍPIOS'].isin(municipios)]
 
-df_filtered = df_ui[df_ui['MUNICÍPIOS'].isin(municipios)]
+    # KPIs
+    st.metric("Total Hospitais", df.shape[0])
+    st.metric("Com Justiça Aberta", df['JUSTIÇA ABERTA'].value_counts().get("Sim", 0))
+    st.metric("Habilitação CRC OK", df['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0))
 
-st.subheader("🏥 Unidades Interligadas")
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Hospitais", df_filtered.shape[0])
-col2.metric("Com Justiça Aberta", df_filtered['JUSTIÇA ABERTA'].value_counts().get("Sim", 0))
-col3.metric("Habilitação CRC OK", df_filtered['HABILITAÇÃO CRC'].value_counts().get("Habilitado", 0))
+    # Gráficos
+    fig = px.bar(df, x="MUNICÍPIOS", y="ÍNDICES IBGE", color="SITUAÇÃO GERAL", title="Distribuição por Municípios")
+    st.plotly_chart(fig)
 
-bar_chart = alt.Chart(df_filtered).mark_bar().encode(
-    x=alt.X("MUNICÍPIOS", sort='-y'),
-    y="ÍNDICES IBGE",
-    color="SITUAÇÃO GERAL"
-).properties(title="Distribuição por Municípios", width=700)
+    pie_fig = px.pie(df, names="SITUAÇÃO GERAL", title="Situação Geral das Unidades")
+    st.plotly_chart(pie_fig)
 
-st.altair_chart(bar_chart, use_container_width=True)
+    # Tabela e Download
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="unidades_interligadas.csv")
 
-pie_data = df_filtered['SITUAÇÃO GERAL'].value_counts().reset_index()
-pie_data.columns = ['Situação Geral', 'Total']
+# ================== ABA 2 - STATUS RECEBIMENTO ==================
+elif selected_tab == "Status Recebimento Formulário":
+    st.header("📄 Status de Recebimento de Formulário")
+    df = load_data("STATUS RECEB FORMULARIO")
 
-pie_chart = alt.Chart(pie_data).mark_arc().encode(
-    theta=alt.Theta(field="Total", type="quantitative"),
-    color=alt.Color(field="Situação Geral", type="nominal")
-).properties(title="Situação Geral")
+    municipios = st.sidebar.multiselect("Selecione os Municípios:", df['MUNICÍPIOS'].unique(), default=df['MUNICÍPIOS'].unique())
+    df = df[df['MUNICÍPIOS'].isin(municipios)]
 
-st.altair_chart(pie_chart, use_container_width=True)
+    # KPIs
+    total = len(df)
+    recebidos = df['STATUS GERAL RECEBIMENTO'].value_counts().get('Recebido', 0)
+    faltantes = total - recebidos
+    st.metric("Recebidos", recebidos)
+    st.metric("Faltantes", faltantes)
 
-st.sidebar.download_button("📥 Baixar Dados", df_filtered.to_csv(index=False), file_name="unidades_interligadas.csv")
+    # Gráfico
+    pie_fig = px.pie(df, names="STATUS GERAL RECEBIMENTO", title="Status Geral Recebimento")
+    st.plotly_chart(pie_fig)
 
-# -------------------- ABA 2: STATUS RECEB FORMULÁRIO --------------------
-st.subheader("📄 Status Recebimento Formulário")
-worksheet_status = sheet.worksheet('STATUS RECEB FORMULARIO')
-df_status = pd.DataFrame(worksheet_status.get_all_records())
+    # Tabela e Download
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="status_recebimento.csv")
 
-status = st.multiselect("Status Geral", df_status['STATUS GERAL RECEBIMENTO'].unique(), default=df_status['STATUS GERAL RECEBIMENTO'].unique())
-df_status_filtered = df_status[df_status['STATUS GERAL RECEBIMENTO'].isin(status)]
+# ================== ABA 3 - MUNICÍPIOS PARA INSTALAR 1 ==================
+elif selected_tab == "Municípios para Instalar 1":
+    st.header("🏗️ Municípios para Instalar - Prov. 07")
+    df = load_data("MUNICÍPIOS PARA INSTALAR")
 
-st.dataframe(df_status_filtered)
-st.metric("Formulários Enviados", df_status_filtered['STATUS GERAL RECEBIMENTO'].value_counts().get("Enviado", 0))
+    fase = st.sidebar.multiselect("Filtrar por Fase:", df['FASE'].unique(), default=df['FASE'].unique())
+    df = df[df['FASE'].isin(fase)]
 
-st.sidebar.download_button("📥 Baixar Status Formulário", df_status_filtered.to_csv(index=False), file_name="status_formulario.csv")
+    st.bar_chart(df['FASE'].value_counts())
 
-# -------------------- ABA 3 & 4: MUNICÍPIOS PARA INSTALAR --------------------
-st.subheader("🚧 Municípios em Fase de Instalação")
-worksheet_inst1 = sheet.worksheet('MUNICÍPIOS PARA INSTALAR')
-df_inst1 = pd.DataFrame(worksheet_inst1.get_all_records())
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="municipios_instalar.csv")
 
-worksheet_inst2 = sheet.worksheet('MUNICÍPIOS PARA INSTALAR2')
-df_inst2 = pd.DataFrame(worksheet_inst2.get_all_records())
+# ================== ABA 4 - MUNICÍPIOS PARA INSTALAR 2 ==================
+elif selected_tab == "Municípios para Instalar 2":
+    st.header("🏗️ Municípios para Instalar - Prov. 07 (Parte 2)")
+    df = load_data("MUNICÍPIOS PARA INSTALAR 2")
 
-df_instalacao = pd.concat([df_inst1, df_inst2], ignore_index=True)
-fase = st.multiselect("Fase de Instalação", df_instalacao['FASE'].unique(), default=df_instalacao['FASE'].unique())
-df_instalacao_filtered = df_instalacao[df_instalacao['FASE'].isin(fase)]
+    fase = st.sidebar.multiselect("Filtrar por Fase:", df['FASE'].unique(), default=df['FASE'].unique())
+    df = df[df['FASE'].isin(fase)]
 
-st.dataframe(df_instalacao_filtered)
+    st.bar_chart(df['FASE'].value_counts())
 
-bar_fase = alt.Chart(df_instalacao_filtered).mark_bar().encode(
-    x="MUNICÍPIOS EM FASE DE INSTALAÇÃO (PROV. 07):",
-    color="FASE"
-).properties(title="Distribuição por Fase")
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="municipios_instalar_2.csv")
 
-st.altair_chart(bar_fase, use_container_width=True)
+# ================== ABA 5 - MUNICÍPIOS INVIÁVEIS ==================
+elif selected_tab == "Municípios Inviáveis":
+    st.header("🚫 Municípios Inviáveis para Instalação")
+    df = load_data("MUN. INVIÁVEIS DE INSTALAÇÃO")
 
-st.sidebar.download_button("📥 Baixar Municípios Instalação", df_instalacao_filtered.to_csv(index=False), file_name="municipios_instalacao.csv")
+    st.bar_chart(df['SITUAÇÃO'].value_counts())
 
-# -------------------- ABA 5: MUN. INVIÁVEIS DE INSTALAÇÃO --------------------
-st.subheader("❌ Municípios Inváiveis")
-worksheet_inv = sheet.worksheet('MUN. INVIÁVEIS DE INSTALAÇÃO')
-df_inv = pd.DataFrame(worksheet_inv.get_all_records())
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="municipios_inviaveis.csv")
 
-st.dataframe(df_inv)
+# ================== ABA 6 - PROVIMENTO 09 ==================
+elif selected_tab == "Provimento 09 - TCT":
+    st.header("📜 Provimento 09 - Termo de Cooperação Técnica (TCT)")
+    df = load_data("PROVIMENTO 09")
 
-pie_inv = df_inv['SITUAÇÃO'].value_counts().reset_index()
-pie_inv.columns = ['Situação', 'Total']
+    assinados = df['MUNICÍPIOS QUE ASSINARAM O TCT'].dropna().count()
+    vao_assinar = df['MUNICÍPIOS VÃO ASSINAR O TCT'].dropna().count()
 
-pie_chart_inv = alt.Chart(pie_inv).mark_arc().encode(
-    theta=alt.Theta(field="Total", type="quantitative"),
-    color=alt.Color(field="Situação", type="nominal")
-).properties(title="Situação dos Municípios Inváiveis")
+    # KPIs
+    st.metric("Assinaram o TCT", assinados)
+    st.metric("Vão Assinar", vao_assinar)
 
-st.altair_chart(pie_chart_inv, use_container_width=True)
+    # Gráfico
+    tct_df = pd.DataFrame({
+        'Status': ['Assinaram', 'Vão Assinar'],
+        'Total': [assinados, vao_assinar]
+    })
+    fig = px.pie(tct_df, names='Status', values='Total', title="Status do Termo de Cooperação")
+    st.plotly_chart(fig)
 
-st.sidebar.download_button("📥 Baixar Municípios Inváiveis", df_inv.to_csv(index=False), file_name="municipios_inviaveis.csv")
-
-# -------------------- ABA 6: PROVIMENTO 09 --------------------
-st.subheader("📜 Provimento 09 – TCT")
-worksheet_tct = sheet.worksheet('PROVIMENTO 09')
-df_tct = pd.DataFrame(worksheet_tct.get_all_records())
-
-col1, col2 = st.columns(2)
-col1.write("### MUNICÍPIOS QUE ASSINARAM O TCT")
-col1.dataframe(df_tct['MUNICÍPIOS QUE ASSINARAM O TCT'].dropna())
-
-col2.write("### MUNICÍPIOS VÃO ASSINAR O TCT")
-col2.dataframe(df_tct['MUNICÍPIOS VÃO ASSINAR O TCT'].dropna())
-
-st.sidebar.download_button("📥 Baixar Provimento 09", df_tct.to_csv(index=False), file_name="provimento09.csv")
-
-st.success("✅ Dashboard carregado com sucesso!")
+    st.dataframe(df)
+    st.download_button("📥 Baixar Dados", df.to_csv(index=False), file_name="provimento09_tct.csv")
