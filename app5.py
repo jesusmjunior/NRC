@@ -7,7 +7,7 @@ import traceback
 
 # ================== CONFIGURAÇÃO DO DASHBOARD ==================
 st.set_page_config(
-    page_title="Dashboard de Unidades Interligadas", 
+    page_title="PAINEL GERENCIAL - Tabela Unidades Interligadas - NRC CGJ - ATUALIZADA", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
