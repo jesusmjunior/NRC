@@ -366,13 +366,29 @@ elif aba_selecionada == "SUB-REGISTRO":
     csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
 # ================== ROBOZINHO VERTICAL ==================
+# ================== ROBOZINHO VERTICAL ANIMADO ==================
 st.markdown("""
+    <style>
+        .faixa {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .robozin {
+            width: 50px;
+            animation: slide 3s ease-in-out infinite alternate;
+        }
+        @keyframes slide {
+            from { transform: translateX(0); }
+            to { transform: translateX(30px); }
+        }
+    </style>
     <div class='faixa'>
-        <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png' width='40' style='vertical-align: middle;'/>  
-        COGEX 2025
+        <img class='robozin' src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
+        <strong style='margin-left:10px;'>COGEX 2025</strong>
     </div>
 """, unsafe_allow_html=True)
-
 # ================== RODAPÉ ==================
 st.markdown("""
     <hr>
@@ -380,8 +396,4 @@ st.markdown("""
     Rua Cumã, nº 300, 1º andar, Edifício Manhattan Center III, Jardim Renascença 2<br>
     São Luís - Maranhão CEP 65.075-700</p>
 """, unsafe_allow_html=True)
-
-st.caption(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-
 st.success("\u2705 Painel COGEX 2025 carregado com sucesso!")
-
