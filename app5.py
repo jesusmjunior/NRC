@@ -365,28 +365,39 @@ elif aba_selecionada == "SUB-REGISTRO":
     # Download CSV
     csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
-# ================== ROBOZINHO VERTICAL ==================
 # ================== ROBOZINHO VERTICAL ANIMADO ==================
 st.markdown("""
     <style>
-        .faixa {
+        .robo-lateral {
+            position: fixed;
+            right: 0;
+            top: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            margin-top: 20px;
+            animation: descer 8s linear infinite alternate;
+            z-index: 1000;
         }
-        .robozin {
-            width: 50px;
-            animation: slide 3s ease-in-out infinite alternate;
+        @keyframes descer {
+            0% { top: 5%; }
+            100% { top: 80%; }
         }
-        @keyframes slide {
-            from { transform: translateX(0); }
-            to { transform: translateX(30px); }
+        .robo-lateral img {
+            width: 60px;
+        }
+        .faixa-texto {
+            background-color: #800000;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-weight: bold;
+            font-size: 12px;
         }
     </style>
-    <div class='faixa'>
-        <img class='robozin' src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
-        <strong style='margin-left:10px;'>COGEX 2025</strong>
+    <div class='robo-lateral'>
+        <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
+        <div class='faixa-texto'>I.A. COGEX 2025</div>
     </div>
 """, unsafe_allow_html=True)
 # ================== RODAPÉ ==================
