@@ -27,6 +27,9 @@ def carregar_dados(sheet_url):
         st.error(f"Erro ao carregar os dados: {str(e)}")
         st.error(traceback.format_exc())
         return pd.DataFrame()
+# ID da planilha SUB-REGISTRO separada
+subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
+subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
 # ================== URLs das Planilhas ==================
 sheet_id = "1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq"
@@ -40,6 +43,7 @@ sheet_urls = {
     "MUNICÍPIOS PARA REATIVAÇÃO": f"{base_url}MUNIC%C3%8DPIOS%20PARA%20REATIVA",
     "ACOMPANHAMENTO ARTICULAÇÃO": f"{base_url}TAB%20ACOMPANHAMENTO%20ARTICULA%C3%87%C3%83O",
     "ÍNDICES DE SUB-REGISTRO": f"{base_url}%C3%8DNDICES%20DE%20SUB-REGISTRO"
+    "SUB-REGISTRO": subregistro_base_url:f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro" # ✅ Aqui você adicionou PERFEITO!
 }
 
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
@@ -309,6 +313,31 @@ elif aba_selecionada == "ÍNDICES DE SUB-REGISTRO":
     except Exception as e:
         st.error(f"Erro ao processar a aba ÍNDICES DE SUB-REGISTRO: {str(e)}")
         st.error(traceback.format_exc())
+# ===================== ABA: SUB-REGISTRO =====================
+elif aba_selecionada == "SUB-REGISTRO":
+    st.header("⚠️ Índices de Sub-registro IBGE por Município")
+
+    # Limpar colunas
+    df.columns = df.columns.str.strip()
+
+    # Ordenar pelos piores índices de sub-registro
+    df_sorted = df[['Nome Município', 'Sub-registro IBGE(1)']].sort_values(by='Sub-registro IBGE(1)', ascending=False)
+
+    st.metric("Total de Municípios", df_sorted.shape[0])
+    st.dataframe(df_sorted, use_container_width=True)
+
+    # Gráfico TOP 10 Piores
+    chart = alt.Chart(df_sorted.head(10)).mark_bar().encode(
+        x=alt.X('Sub-registro IBGE(1):Q', title='Índice de Sub-registro (%)'),
+        y=alt.Y('Nome Município:N', sort='-x'),
+        color=alt.value('#d62728'),
+        tooltip=['Nome Município', 'Sub-registro IBGE(1)']
+    ).properties(title='Top 10 Municípios com Piores Índices de Sub-registro')
+    st.altair_chart(chart, use_container_width=True)
+
+    # Download CSV
+    csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
+    st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
 
 # ================== MENSAGEM FINAL ==================
 st.success("\u2705 Dashboard atualizado com sucesso!")
