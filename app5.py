@@ -36,14 +36,15 @@ sheet_id = "1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
 
 sheet_urls = {
+   sheet_urls = {
     "UNIDADES INTERLIGADAS": f"{base_url}UNIDADES%20INTERLIGADAS",
     "STATUS RECEBIMENTO FORMULÁRIO": f"{base_url}STATUS%20RECEB%20FORMULARIO",
     "MUNICÍPIOS PARA INSTALAR": f"{base_url}MUNICIPIOS%20PARA%20INSTALAR",
     "PROVIMENTO 09": f"{base_url}PROVIMENTO%2009",
     "MUNICÍPIOS PARA REATIVAÇÃO": f"{base_url}MUNIC%C3%8DPIOS%20PARA%20REATIVA",
     "ACOMPANHAMENTO ARTICULAÇÃO": f"{base_url}TAB%20ACOMPANHAMENTO%20ARTICULA%C3%87%C3%83O",
-    "ÍNDICES DE SUB-REGISTRO": f"{base_url}%C3%8DNDICES%20DE%20SUB-REGISTRO"
-    "SUB-REGISTRO": subregistro_base_url:f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro" # ✅ Aqui você adicionou PERFEITO!
+    "ÍNDICES DE SUB-REGISTRO": f"{base_url}%C3%8DNDICES%20DE%20SUB-REGISTRO",  # ✅ Aqui estava faltando vírgula!
+    "SUB-REGISTRO": subregistro_base_url  # ✅ Aqui apenas coloque a variável que você já criou!
 }
 
 # ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
