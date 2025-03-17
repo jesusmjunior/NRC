@@ -365,7 +365,7 @@ elif aba_selecionada == "SUB-REGISTRO":
     # Download CSV
     csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
-# ================== ROBOZINHO VERTICAL COM LINK ==================
+# ================== ROBOZINHO VERTICAL COM LINK 100% CLICÁVEL ==================
 st.markdown("""
     <style>
         .robo-lateral {
@@ -377,6 +377,7 @@ st.markdown("""
             align-items: center;
             animation: descer 8s linear infinite alternate;
             z-index: 1000;
+            pointer-events: auto;
         }
         @keyframes descer {
             0% { top: 5%; }
@@ -398,13 +399,16 @@ st.markdown("""
             font-weight: bold;
             font-size: 12px;
         }
+        .robo-link {
+            text-decoration: none;
+        }
     </style>
-    <div class='robo-lateral'>
-        <a href='https://www.tjma.jus.br/site/extrajudicial' target='_blank'>
+    <a class='robo-link' href='https://www.tjma.jus.br/site/extrajudicial' target='_blank'>
+        <div class='robo-lateral'>
             <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
-        </a>
-        <div class='faixa-texto'>I.A. COGEX 2025</div>
-    </div>
+            <div class='faixa-texto'>I.A. COGEX 2025</div>
+        </div>
+    </a>
 """, unsafe_allow_html=True)
 # ================== RODAPÉ ==================
 st.markdown("""
