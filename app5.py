@@ -319,7 +319,7 @@ elif aba_selecionada == "ÍNDICES DE SUB-REGISTRO":
         st.error(traceback.format_exc())
 # ===================== ABA: SUB-REGISTRO =====================
 elif aba_selecionada == "SUB-REGISTRO":
-    st.header("⚠️ Índices de Sub-registro IBGE por Município")
+    st.header("⚠️ DATA SET ORGANIZADO 17/04/2024 - Índices de Sub-registro IBGE por Município")
 
     # Limpar colunas
     df.columns = df.columns.str.strip()
