@@ -12,8 +12,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("\U0001F4CA Dashboard de Unidades Interligadas")
-st.caption(f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+# ================== CABEÇALHO COM IMAGEM E TÍTULO ==================
+col1, col2 = st.columns([6, 1])
+
+with col1:
+    st.title("📊 CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
+    st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
+    st.caption(f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+with col2:
+    st.image("https://raw.githubusercontent.com/jesusmjunior/dashboard-registro-civil-prov07/main/CGX.png", width=120)
+
+# ================== AVISO UNIDADE INTERLIGADA ==================
+st.warning("🚨 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
+st.markdown("[📝 **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
+
+# ================== RESUMO DO PROVIMENTO ==================
+with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
+    st.markdown("""
+**Resumo do Provimento CGJ:**
+
+A instalação de unidades interligadas em hospitais é obrigatória, independentemente do número de partos. Os registros de nascimento e óbito são feitos nessas unidades com livro próprio. Os serviços devem enviar relatório mensal até o dia 10 via [Formulário Online](https://forms.gle/vETZAjAStN3F9YHx9), sob pena de sanções administrativas.
+
+**Desembargador José Jorge Figueiredo dos Anjos**  
+Corregedor-Geral da Justiça (Biênio 2024-2026)
+""")
 
 # ================== FUNÇÃO PARA CARREGAR DADOS ==================
 @st.cache_data(ttl=3600)
