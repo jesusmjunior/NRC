@@ -16,7 +16,7 @@ st.set_page_config(
 col1, col2 = st.columns([6, 1])
 
 with col1:
-    st.title("📊 CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
+    st.title("📊PAINEL GERENCIAL - Tabela Unidades Interligadas - NRC COGEX -MA - ATUALIZADA CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
     st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
     st.caption(f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 
