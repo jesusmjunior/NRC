@@ -5,49 +5,42 @@ import numpy as np
 from datetime import datetime
 import traceback
 
-# ================== SISTEMA DE LOGIN MUITO SIMPLES ==================
-# Lista de usuários e senhas (simples e direto)
-usuarios_validos = {
-    "COGEX": "X",
-    # Adicione novos usuários:
-    # "usuario1": "senha1",
-    # "usuario2": "senha2",
-    # "usuario3": "senha3",
-    # "usuario4": "senha4",
-    # "usuario5": "senha5",
-    # "usuario6": "senha6",
-    # "usuario7": "senha7",
-    # "usuario8": "senha8",
-}
+# ================================
+# CONFIGURAÇÃO INICIAL PRIMEIRA LINHA
+# ================================
+st.set_page_config(page_title="PAINEL GERENCIAL - NRC COGEX", layout="wide")
 
-# ================== FUNÇÃO DE LOGIN ==================
+# ================================
+# LOGIN SIMPLES - ESTILO SIMPLES DIRETO
+# ================================
 def login():
-    st.title("🔐 BEM VINDO! NRC COGEX -MA!")
-    username = st.text_input("Usuário")
+    st.title("🔐 Área Protegida - NRC COGEX -MA!")
+    user = st.text_input("Usuário (Email)")
     password = st.text_input("Senha", type="password")
-    if st.button("Entrar"):
-        if username in usuarios_validos and password == usuarios_validos[username]:
-            st.session_state["autenticado"] = True
-            st.success("\u2705 Login realizado com sucesso!")
-        else:
-            st.error("\u274C Usuário ou senha incorretos.")
 
-# ================== CHECAGEM DE LOGIN ==================
-if "autenticado" not in st.session_state:
-    st.session_state["autenticado"] = False
+    usuarios_validos = {
+        "COGEX": "X",
+        "NRC": "X",
+        # Adicione novos usuários aqui, exemplo:
+        # "usuario3@gmail.com": "senha3",
+        # "usuario4@gmail.com": "senha4",
+    }
 
-if not st.session_state["autenticado"]:
-    login()
-    st.stop()
+    if user in usuarios_validos and password == usuarios_validos[user]:
+        st.success("Login efetuado com sucesso ✅")
+        return True
+    else:
+        if user and password:
+            st.error("Usuário ou senha incorretos ❌")
+        st.stop()
 
-# ================== CONFIGURAÇÃO DO DASHBOARD ==================
-st.set_page_config(
-    page_title="PAINEL GERENCIAL - Tabela Unidades Interligadas - NRC CGJ - ATUALIZADA", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ================================
+# EXECUTA LOGIN
+# ================================
+login()
 
-# ================== CABEÇALHO ==================
+# ================================
+# CABEÇALHO ================================
 col1, col2 = st.columns([6, 1])
 
 with col1:
@@ -58,11 +51,13 @@ with col1:
 with col2:
     st.image("https://raw.githubusercontent.com/jesusmjunior/dashboard-registro-civil-prov07/main/CGX.png", width=120)
 
-# ================== AVISO ==================
+# ================================
+# AVISO ================================
 st.warning("\U0001F6A8 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
 st.markdown("[\U0001F4DD **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
 
-# ================== RESUMO ==================
+# ================================
+# RESUMO ================================
 with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
     st.markdown("""
 **Resumo do Provimento CGJ:**
@@ -73,7 +68,8 @@ A instalação de unidades interligadas em hospitais é obrigatória, independen
 Corregedor-Geral da Justiça (Biênio 2024-2026)
 """)
 
-# ================== FUNÇÃO PARA CARREGAR DADOS ==================
+# ================================
+# FUNÇÃO PARA CARREGAR DADOS ================================
 @st.cache_data(ttl=3600)
 def carregar_dados(sheet_url):
     try:
@@ -86,14 +82,16 @@ def carregar_dados(sheet_url):
         st.error(traceback.format_exc())
         return pd.DataFrame()
 
-# ================== ID das Planilhas ==================
+# ================================
+# ID das Planilhas ================================
 subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
 subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
 sheet_id = "1cWbDNgy8Fu75FvXLvk-q2RQ0X-n7OsXq"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
 
-# ================== URLs ==================
+# ================================
+# URLs ================================
 sheet_urls = {
     "UNIDADES INTERLIGADAS": f"{base_url}UNIDADES%20INTERLIGADAS",
     "STATUS RECEBIMENTO FORMULÁRIO": f"{base_url}STATUS%20RECEB%20FORMULARIO",
@@ -105,12 +103,14 @@ sheet_urls = {
     "SUB-REGISTRO": subregistro_base_url
 }
 
-# ================== BARRA LATERAL - SELEÇÃO DE ABA ==================
+# ================================
+# BARRA LATERAL - SELEÇÃO DE ABA ================================
 st.sidebar.header("\U0001F4C2 Seleção de Aba")
 tabs = list(sheet_urls.keys())
 aba_selecionada = st.sidebar.radio("Selecione uma aba:", tabs)
 
-# ================== LOADING SPINNER ==================
+# ================================
+# LOADING SPINNER ================================
 with st.spinner(f"Carregando dados da aba {aba_selecionada}..."):
     df = carregar_dados(sheet_urls[aba_selecionada])
 
@@ -118,7 +118,8 @@ if df.empty:
     st.error(f"Não foi possível carregar os dados da aba {aba_selecionada}.")
     st.stop()
 
-# ================== FUNÇÕES AUXILIARES ==================
+# ================================
+# FUNÇÕES AUXILIARES ================================
 def botao_download(dataframe, filename):
     csv = dataframe.to_csv(index=False, encoding='utf-8-sig')
     return st.sidebar.download_button(
@@ -137,5 +138,6 @@ def resumo_dados(dataframe):
     with col3:
         st.metric("Última atualização", datetime.now().strftime("%d/%m/%Y"))
 
-# ================== EXIBIÇÃO DOS DADOS ==================
+# ================================
+# EXIBIÇÃO DOS DADOS ================================
 # Aqui você coloca suas condições para cada aba, como já está implementado no seu código original.
