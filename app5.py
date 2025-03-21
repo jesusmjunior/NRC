@@ -20,10 +20,8 @@ usuarios_validos = {
     # "usuario8": "senha8",
 }
 
-if "autenticado" not in st.session_state:
-    st.session_state["autenticado"] = False
-
-if not st.session_state["autenticado"]:
+# ================== FUNÇÃO DE LOGIN ==================
+def login():
     st.title("🔐 BEM VINDO! NRC COGEX -MA!")
     username = st.text_input("Usuário")
     password = st.text_input("Senha", type="password")
@@ -31,9 +29,15 @@ if not st.session_state["autenticado"]:
         if username in usuarios_validos and password == usuarios_validos[username]:
             st.session_state["autenticado"] = True
             st.success("\u2705 Login realizado com sucesso!")
-            st.experimental_rerun()
         else:
             st.error("\u274C Usuário ou senha incorretos.")
+
+# ================== CHECAGEM DE LOGIN ==================
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
+
+if not st.session_state["autenticado"]:
+    login()
     st.stop()
 
 # ================== CONFIGURAÇÃO DO DASHBOARD ==================
