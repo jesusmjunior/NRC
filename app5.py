@@ -67,8 +67,6 @@ A instalação de unidades interligadas em hospitais é obrigatória, independen
 **Desembargador José Jorge Figueiredo dos Anjos**  
 Corregedor-Geral da Justiça (Biênio 2024-2026)
 """)
-
-# ================================
 # FUNÇÃO PARA CARREGAR DADOS ================================
 @st.cache_data(ttl=3600)
 def carregar_dados(sheet_url):
